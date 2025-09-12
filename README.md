@@ -4,6 +4,8 @@
 
 [![DOI](https://zenodo.org/badge/1048146070.svg)](https://doi.org/10.5281/zenodo.17075450)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Website](https://img.shields.io/badge/Website-erroranalyzer.com-blue)](https://erroranalyzer.com)
+[![Download](https://img.shields.io/badge/Download-Windows%20Installer-blue)](https://github.com/SidahmedKhettab/error-analyzer/releases/latest/download/Error-Analyzer-Setup.exe)
 
 > Copyright © 2025 [**Sid Ahmed KHETTAB**](https://scholar.google.com/citations?user=ABvaWHoAAAAJ&hl=en)  
 > Developed during doctoral research at the [**University of Oran 2 Mohamed Ben Ahmed**](https://www.univ-oran2.dz/), under the supervision of [**Prof. Fatima Zohra HARIG BENMOSTEFA**](https://scholar.google.fr/citations?user=MULc2x4AAAAJ&)  
