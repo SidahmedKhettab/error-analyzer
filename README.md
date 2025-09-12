@@ -27,6 +27,10 @@ Error Analyzer is an open-source, advanced web-based platform for qualitative er
 
 ## 🚀 Installation
 
+> ⚠️ **Note:**  
+> - If you’re on Windows and don’t have experience with Python or development environments, it’s preferable to use the compiled standalone **Windows Installer** available [here](https://github.com/SidahmedKhettab/error-analyzer/releases/latest/download/Error-Analyzer-Setup.exe).  
+> - On Linux or macOS, or if you’re an advanced Windows user, follow the steps below to build from source. These instructions are intended for users who are comfortable working with code.
+
 To get Error Analyzer up and running on your local machine, follow these steps:
 
 1.  **Clone the Repository:**
