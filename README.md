@@ -100,7 +100,7 @@ You may use and modify this software. If you modify and host it for others to us
 
 If you use Error Analyzer in research, please cite:
 
-Khettab, S. A. (2025). Error Analyzer (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.17075450
+KHETTAB, S. A. (2025). Error Analyzer (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.17075450
 
 ## 📧 Contact
 
