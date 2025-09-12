@@ -4,7 +4,7 @@ version: 1.0.0
 doi: 10.5281/zenodo.17075450
 message: If you use this software, please cite it.
 authors:
-  - family-names: Khettab
+  - family-names: KHETTAB
     given-names: Sid Ahmed
 date-released: 2025-09-08
 url: https://github.com/SidahmedKhettab/error-analyzer
