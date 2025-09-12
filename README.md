@@ -9,7 +9,7 @@
 
 > Copyright © 2025 [**Sid Ahmed KHETTAB**](https://scholar.google.com/citations?user=ABvaWHoAAAAJ&hl=en)  
 > Developed during doctoral research at the [**University of Oran 2 Mohamed Ben Ahmed**](https://www.univ-oran2.dz/), under the supervision of [**Prof. Fatima Zohra HARIG BENMOSTEFA**](https://scholar.google.fr/citations?user=MULc2x4AAAAJ&)  
-> Licensed under the [**GNU AGPL v3 or later**](https://www.gnu.org/licenses/agpl-3.0) *(AGPL-3.0-or-later)*
+> Licensed under the [**GNU AGPL v3**](https://www.gnu.org/licenses/agpl-3.0)
 
 Error Analyzer is an open-source, advanced web-based platform for qualitative error analysis, annotation, and text correction. Developed within the fields of linguistics, discourse analysis, and semiotics, it is designed to support rigorous academic research. The platform enables researchers to conduct systematic investigations by comparing 'wrong' and 'corrected' texts, applying qualitative coding procedures, categorizing errors, and identifying recurrent linguistic patterns. Assisted by Google’s Natural Language Processing (NLP) and Gemini AI, Error Analyzer integrates computational methods with established analytical frameworks, producing detailed reports that enhance both empirical studies and pedagogical practice. It is intended for linguists, educators, and scholars who seek not only correction but also structured analysis, theoretical insight, and reproducible research outcomes.
 
@@ -91,10 +91,10 @@ Contributions are welcome! If you have suggestions for improvements, bug reports
 
 ## 📄 License
 
-Licensed under **AGPL-3.0-or-later**. See the [LICENSE](LICENSE) file for the complete terms.  
+Licensed under **AGPL-3.0**. See the [LICENSE](LICENSE) file for the complete terms.  
 
 *Summary (not a substitute for the license):*  
-You may use and modify this software. If you modify and host it for others to use, you must also make your source code available under the same license.
+You may use and modify this software. If you modify or host it for others to use, you must also make your source code available under the same license.
 
 ## 📚 Citation
 
