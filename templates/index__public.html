@@ -1,0 +1,70 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <h1>Welcome to Error Analyzer</h1>
+        <p class="lead">Your hub for a more precise qualitative error analysis.</p>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Get Started</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-lg">Login</a>
+    </div>
+</div>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="feature-card text-center">
+                <div class="feature-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h5>Create & Manage Projects</h5>
+                <p>Organize your error analysis into projects. Keep your data structured and easily accessible.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card text-center">
+                <div class="feature-icon">
+                    <i class="fas fa-search-plus"></i>
+                </div>
+                <h5>In-Depth Error Analysis</h5>
+                <p>Upload your transcription data and use our powerful tools to identify and tag errors with precision.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card text-center">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h5>Gain Valuable Insights</h5>
+                <p>Generate reports and visualizations to understand error patterns and improve transcription quality.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="cta-section">
+    <div class="container">
+        <h2>Ready to dive in?</h2>
+        <p>Create an account or log in to start your analysis.</p>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Create Your Account</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-lg">Login</a>
+    </div>
+</div>
+{% endblock %}

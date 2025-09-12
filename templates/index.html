@@ -1,0 +1,126 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+
+{% block title %}Error Analyzer - Qualitative Error Analysis{% endblock %}
+
+{% block content %}
+    <section class="hero">
+        <h1>{{ get_translation('Welcome to Error Analyzer') }}</h1>
+        <p>{{ get_translation('Your hub for a more precise qualitative error analysis.') }}</p>
+        <div class="cta-buttons">
+            <a href="{{ url_for('projects.create_project') }}" class="btn">{{ get_translation('Create New Project') }}</a>
+            <a href="#import" class="btn btn-secondary" id="import-project-btn">{{ get_translation('Import Project') }}</a>
+        </div>
+    </section>
+
+    <section id="projects" class="projects-section">
+        <h2>{{ get_translation('Your Projects') }}</h2>
+        <div class="projects-grid">
+            {% if projects %}
+                {% for project in projects %}
+                    <div class="project-card">
+                        <div class="project-card-header">
+                            <h3>{{ project[0] | safe }}</h3>
+                            <div class="dropdown">
+                                <span class="dropbtn">&#8942;</span>
+                                <div class="dropdown-content">
+                                    <a href="{{ url_for('projects.edit_project', project_name=project[0]) }}">{{ get_translation('Edit') }}</a>
+                                    <a href="{{ url_for('projects.export_project', project_name=project[0]) }}">{{ get_translation('Export') }}</a>
+                                    <a href="{{ url_for('projects.delete_project', project_name=project[0]) }}" class="delete-project-link">{{ get_translation('Delete') }}</a>
+                                </div>
+                            </div>
+                        </div>
+                        <p>{{ project[1] | safe }}</p>
+                        <a href="{{ url_for('projects.project', project_name=project[0]) }}">{{ get_translation('View Project &rarr;') | safe }}</a>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        {% if not projects %}
+        <div class="no-projects">
+            <p>{{ get_translation('No projects found. Please create a new project using the button above.') }}</p>
+        </div>
+        {% endif %}
+
+    <div id="import-project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>{{ get_translation('Import Project') }}</h2>
+                <button class="close-modal close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="import-project-form" action="{{ url_for('projects.import_project') }}" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="project-file">{{ get_translation('Select Project File (.zip)') }}</label>
+                        <input type="file" id="project-file" name="project_file" accept=".zip" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-project-name">{{ get_translation('New Project Name') }}</label>
+                        <input type="text" id="new-project-name" name="new_project_name" required>
+                    </div>
+                    <button type="submit" class="btn">{{ get_translation('Import') }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const importBtn = document.getElementById('import-project-btn');
+    const importModal = document.getElementById('import-project-modal');
+    const closeModal = importModal.querySelector('.close-modal');
+
+    importBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        importModal.classList.add('show');
+    });
+
+    closeModal.addEventListener('click', function() {
+        importModal.classList.remove('show');
+    });
+
+    window.addEventListener('click', function(e) {
+        if (e.target == importModal) {
+            importModal.classList.remove('show');
+        }
+    });
+
+    document.querySelectorAll('.delete-project-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const href = this.getAttribute('href');
+            Swal.fire({
+                title: '{{ get_translation('Delete this project?') }}',
+                text: '{{ get_translation('This action cannot be undone.') }}',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '{{ get_translation('Delete') }}',
+                cancelButtonText: '{{ get_translation('Cancel') }}'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = href;
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

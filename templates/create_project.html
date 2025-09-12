@@ -1,0 +1,127 @@
+<!--
+ Copyright © 2025 Sid Ahmed Khettab
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+{% extends 'base.html' %}
+
+{% block title %}{% if project %}{{ get_translation('Edit Project') }}{% else %}{{ get_translation('Create Project') }}{% endif %} - Error Analyzer{% endblock %}
+
+{% block head %}
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --primary-hover-color: #357abd;
+            --background-color: #f7f9fc;
+            --text-color: #333;
+            --card-background-color: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --header-bg: #1a1a1a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2em;
+        }
+
+        main {
+            padding: 4em 0;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 4em auto;
+            background-color: var(--card-background-color);
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
+
+        .form-container h1 {
+            text-align: center;
+            margin-bottom: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 1.5em;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.8em 1.5em;
+            font-size: 1em;
+            color: white;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover-color);
+            transform: translateY(-2px);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="form-container">
+        <h1>{% if project %}{{ get_translation('Edit Project') }}{% else %}{{ get_translation('Create a New Project') }}{% endif %}</h1>
+        <form action="{% if project %}{{ url_for('projects.edit_project', project_name=project[0]) }}{% else %}{{ url_for('projects.create_project') }}{% endif %}" method="post">
+            <div class="form-group">
+                <label for="project_name">{{ get_translation('Project Name') }}</label>
+                <input type="text" id="project_name" name="project_name" placeholder="{{ get_translation('Enter a name for your project') }}" value="{% if project %}{{ project[0]|safe }}{% endif %}" required>
+            </div>
+            <div class="form-group">
+                <label for="project_description">{{ get_translation('Project Description') }}</label>
+                <textarea id="project_description" name="project_description" placeholder="{{ get_translation('Describe your project') }}" required>{% if project %}{{ project[1]|safe }}{% endif %}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="project_language">{{ get_translation('Project Language') }}</label>
+                <select id="project_language" name="project_language" required>
+                   <option value="en" {% if (project and project[2] == 'en') or (not project and default_language == 'en') %}selected{% endif %}>{{ get_translation('English') }}</option>
+                    <option value="fr" {% if (project and project[2] == 'fr') or (not project and default_language == 'fr') %}selected{% endif %}>{{ get_translation('French') }}</option>
+                </select>
+            </div>
+            <button type="submit" class="btn">{% if project %}{{ get_translation('Update Project') }}{% else %}{{ get_translation('Create Project') }}{% endif %}</button>
+        </form>
+    </div>
+{% endblock %}

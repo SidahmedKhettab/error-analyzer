@@ -1,0 +1,509 @@
+/*
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+*/
+
+/* General Body Styling */
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        /* Text Styling for Different States */
+        .deleted {
+            color: red;
+            font-weight: bold;
+        }
+        .replaced {
+            color: orange;
+            font-weight: bold;
+        }
+        .added {
+            color: green;
+            font-weight: bold;
+        }
+        .replacedby {
+            color: blue;
+            font-weight: bold;
+        }
+        .unchanged {
+            color: black;
+            font-weight: normal;
+        }
+
+        /* Highlight and Clickable Elements */
+        .highlight {
+            background-color: yellow;
+        }
+        .clickable {
+            cursor: pointer;
+        }
+        .non-clickable {
+            cursor: default;
+        }
+
+        /* Modern Toggle Switch CSS */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: green;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Label Styling */
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        /* Legend Styling */
+.replaced-tape {
+    background-color: #ffc107; /* Amber */
+}
+.replaced-by-tape {
+    background-color: #4caf50; /* Green */
+}
+.added-tape {
+    background-color: #2196f3; /* Blue */
+}
+.deleted-tape {
+    background-color: #f44336; /* Red */
+}
+.legend {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    max-width: 320px;
+    font-family: Arial, sans-serif;
+    margin: 20px auto;
+}
+.legend-item {
+    display: contents;
+}
+.color-tape {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 0;
+}
+.legend-item span {
+    line-height: 1.5;
+}
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        /* Popup Styling */
+        .popup {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 300px;
+            height: 100%;
+            background-color: #242424;
+            color: #fff;
+            position: fixed;
+            top: 0;
+            left: -300px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            padding-top: 60px;
+        }
+        .sidebar.active {
+            left: 0;
+        }
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .sidebar ul li {
+            padding: 15px 20px;
+            border-bottom: 1px solid #444;
+        }
+        .sidebar ul li a {
+            color: #fff;
+            text-decoration: none;
+            display: block;
+        }
+        .sidebar ul li a:hover {
+            background-color: #575757;
+            border-radius: 4px;
+        }
+
+        /* Toggle Button Styling */
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #242424;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            z-index: 1001;
+        }
+        .toggle-btn i {
+            font-size: 20px;
+        }
+
+        /* Content Shift when Sidebar is Active */
+        .content {
+            padding: 20px;
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+        }
+        .content.shifted {
+            margin-left: 300px;
+        }
+
+        /* Tagging Popup Styling */
+        #tagging-popup {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+        }
+        .popup-header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            position: relative;
+        }
+        .close-button {
+            cursor: pointer;
+            font-size: 18px;
+            background-color: black;
+            color: white;
+            border-radius: 50%;
+            padding: 5px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: -12px;
+            right: -12px;
+        }
+        .highlight-item {
+            margin-bottom: 8px;
+        }
+        .create-highlight-link {
+            display: block;
+            margin-top: 12px;
+            text-align: center;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .create-highlight-link:hover {
+            text-decoration: underline;
+        }
+
+        .operations {
+            display: none;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px; /* Set the maximum height for the list */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+
+        /* Styling the tables dropdown */
+        #analysis_dropdown {
+            text-align: center;
+        }
+        #analysisType {
+            display: none;
+            font-size: 1em;
+            font-family: Arial, sans-serif;
+            padding: 0.5em 1em;
+            margin-bottom: 20px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background-color: #fff;
+            color: #333;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #analysisType:hover {
+            border-color: #555;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #analysisType:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        #analysisType option {
+            padding: 0.5em;
+            background-color: #fff;
+            color: #333;
+        }
+
+        #analysisType option:hover {
+            background-color: #f1f1f1;
+        }
+
+        #analysisType::-ms-expand {
+            display: none;
+        }
+
+        /* Genre Class */
+
+        #genreclass {
+            text-align: center;
+        }
+
+        /* Menu Tab */
+
+        .tab-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #242424;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .tab-buttons {
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 1px solid #ccc;
+        }
+        .tab-buttons button {
+            flex: 1;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #fff;
+            border: none;
+            outline: none;
+            transition: background-color 0.3s;
+        }
+        .tab-buttons button:hover {
+            background-color: #f0f0f0;
+        }
+        .tab-buttons .active {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* Styling Highlights in the Menu */
+
+        #Highlights {
+            width: 80%;
+            margin: 20px auto;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .highlight-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #e8f4f8;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .highlight-item:hover {
+            background-color: #d4ecf7;
+        }
+        .highlight-item a {
+            font-size: 18px;
+            text-decoration: none;
+            color: #007bff;
+        }
+        .highlight-item a:hover {
+            text-decoration: underline;
+        }
+        .edit-button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .edit-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Popup edit box styling */
+
+        .popup-edit-box {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        .popup-edit-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .popup-edit-box h2 {
+            margin-top: 0;
+        }
+        .popup-edit-box label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        .popup-edit-box input, .popup-edit-box textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .popup-edit-box .button-group {
+            display: flex;
+            justify-content: space-between;
+        }
+        .popup-edit-box button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .popup-edit-box .save-button {
+            background-color: #28a745;
+            color: #fff;
+        }
+        .popup-edit-box .delete-button {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        .popup-edit-box .close-button {
+            background-color: black;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            line-height: 20px;
+            padding: 0;
+        }
+        .popup-edit-box .save-button:hover {
+            background-color: #218838;
+        }
+        .popup-edit-box .delete-button:hover {
+            background-color: #c82333;
+        }
+        .popup-edit-box .close-button:hover {
+            background-color: #5a6268;
+        }

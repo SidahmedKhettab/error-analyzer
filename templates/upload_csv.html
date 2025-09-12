@@ -1,0 +1,115 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+
+{% block title %}{{ get_translation('Upload CSV - Error Analyzer') }}{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="form-container">
+        <h1>{{ get_translation('Upload CSV File for') }} {{ project_name | safe }}</h1>
+        <p>{{ get_translation('Please ensure your CSV file contains two columns: ErrorText and CorrectedText.') }} {{ get_translation('csv_format_guidance', download_link=url_for('download_sample_csv')) | safe }}</p>
+        <div class="flash-message">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <ul>
+                {% for category, message in messages %}
+                  <li class="{{ category }}">{{ message | safe }}</li>
+                {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+        </div>
+        <form id="uploadForm" action="{{ url_for('uploads.upload_csv_post') }}" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="project_name" value="{{ project_name }}">
+            <div class="file-upload" id="dropZone">
+                <input type="file" id="csvFile" name="csvFile" accept=".csv" onchange="handleFileSelect()">
+                <label for="csvFile" id="fileLabel">{{ get_translation('Drag & drop your CSV file here or click to select a file') }}</label>
+            </div>
+            <div style="text-align: center; margin-top: 1em;">
+                <button type="submit" class="btn" id="uploadButton" disabled>{{ get_translation('Upload') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('csvFile');
+const fileLabel = document.getElementById('fileLabel');
+const uploadForm = document.getElementById('uploadForm');
+const uploadButton = document.getElementById('uploadButton');
+
+// Prevent default drag behaviors
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, preventDefaults, false);
+    document.body.addEventListener(eventName, preventDefaults, false);
+});
+
+// Highlight drop zone when item is dragged over it
+['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, unhighlight, false);
+});
+
+// Handle dropped files
+dropZone.addEventListener('drop', handleDrop, false);
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+function highlight(e) {
+    dropZone.style.borderColor = '#4a90e2';
+    dropZone.style.backgroundColor = '#e9f2fc';
+}
+
+function unhighlight(e) {
+    dropZone.style.borderColor = '#ccc';
+    dropZone.style.backgroundColor = '#f9f9f9';
+}
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    fileInput.files = files;
+    handleFileSelect();
+}
+
+function handleFileSelect() {
+    if (fileInput.files.length > 0) {
+        fileLabel.textContent = `Selected file: ${fileInput.files[0].name}`;
+        uploadButton.disabled = false;
+    } else {
+        fileLabel.innerHTML = "{{ get_translation('Drag & drop your CSV file here or click to select a file') }}";
+        uploadButton.disabled = true;
+    }
+}
+
+</script>
+{% endblock %}

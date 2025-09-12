@@ -1,0 +1,44 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+{% block title %}{{ get_translation('Edit Profile') }}{% endblock %}
+{% block content %}
+<div class="edit-profile-container">
+    <h1>{{ get_translation('Edit Profile') }}</h1>
+    <form method="post">
+        <div class="form-group">
+            <label>{{ get_translation('Full name') }}</label>
+            <input type="text" name="full_name" value="{{ profile_user.full_name or '' }}">
+        </div>
+        <div class="form-group">
+            <label>{{ get_translation('Email') }}</label>
+            <input type="email" name="email" value="{{ profile_user.email or '' }}">
+        </div>
+        <div class="form-group">
+            <label>{{ get_translation('Avatar URL') }}</label>
+            <input type="url" name="avatar_url" value="{{ profile_user.avatar_url or '' }}">
+        </div>
+        <div class="form-group">
+            <label>{{ get_translation('Bio') }}</label>
+            <textarea name="bio" rows="4">{{ profile_user.bio or '' }}</textarea>
+        </div>
+        <button type="submit" class="btn">{{ get_translation('Save Changes') }}</button>
+        <a href="{{ url_for('auth.profile', username=profile_user.username) }}" class="btn btn-secondary">{{ get_translation('Cancel') }}</a>
+    </form>
+</div>
+{% endblock %}

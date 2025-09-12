@@ -1,0 +1,788 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+{% block body_start %}
+<script>
+  document.addEventListener("DOMContentLoaded", function(){
+    document.body.classList.add("tag-report-page");
+  });
+</script>
+{% endblock %}
+
+{% block title %}{{ get_translation('Tag Report') }}{% endblock %}
+
+{% block head %}
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='erroranalyzer.css') }}" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
+    <style>
+        .dropdown-item { cursor: pointer; }
+        body {
+            background-color: #ffffff;
+            font-family: Helvetica, Arial, sans-serif;
+        }
+ 
+        .tag-group {
+            margin-bottom: 20px;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+ 
+        .tag-title {
+            font-weight: 600;
+            font-size: 1.3em;
+            margin-bottom: 8px;
+        }
+ 
+        .tag-description {
+            font-style: italic;
+            color: #007bff;
+            margin-bottom: 12px;
+        }
+ 
+        .annotation-context {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+        }
+ 
+        .panel-header {
+            border-bottom: 2px solid #cce5ff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+ 
+        /* Additional spacing for filters */
+        #tag-report-filters {
+            margin-bottom: 20px;
+        }
+ 
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+ 
+        .analyzer-app, .analyzer-container {
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        #center-panel {
+            width: 100%;
+            min-height: 100vh;
+        }
+       .analyzer-container {
+           width: 100%;
+           padding: 20px;
+           box-sizing: border-box;
+       }
+        #center-panel {
+            padding: 20px;
+        }
+ 
+        #tag-report-summary, #tag-report-filters {
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+        .analyzer-app {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        /* Force the main container to full width for tag_report page */
+        main.analyzer-container {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        body.tag-report-page main.container {
+            width: 100%;
+            max-width: 100%;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+ 
+        body.tag-report-page main.container {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        /* Ensure that striking elements inside highlighted text inherit the text color */
+        .highlight s, .highlight strike, .highlight del {
+            color: inherit;
+        }
+        /* Ensure that striking elements inside highlighted text use dynamic text color */
+        .highlight s, .highlight strike, .highlight del {
+            color: currentColor !important;
+        }
+
+        /* Override the three-panel app layout for tag_report page to allow full scrolling */
+        body.tag-report-page .analyzer-app { height: auto; min-height: 100vh; }
+        body.tag-report-page .analyzer-container { display: block; height: auto; overflow: visible; }
+        body.tag-report-page .panel { height: auto; }
+        body.tag-report-page #center-panel { min-height: auto; }
+        body.tag-report-page .panel-content { overflow: visible; }
+        body.tag-report-page html, body { overflow-y: auto; }
+        body.tag-report-page canvas { max-width: 100%; }
+        body.tag-report-page header,
+        body.tag-report-page footer {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .chart-loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -20px;
+            margin-left: -20px;
+            z-index: 10;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .chart-error-message {
+            color: red;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* NLP Analysis text styling */
+        #nlp-llm-report { font-size: 0.95rem; line-height: 1.5; color: #1f2937; }
+        #nlp-llm-report h1 { font-size: 1.25rem; margin-top: 0.75rem; margin-bottom: 0.5rem; }
+        #nlp-llm-report h2 { font-size: 1.1rem; margin-top: 0.75rem; margin-bottom: 0.5rem; }
+        #nlp-llm-report h3 { font-size: 1.0rem; margin-top: 0.5rem; margin-bottom: 0.5rem; }
+        #nlp-llm-report p { margin: 0.25rem 0; }
+        #nlp-llm-report ul { margin: 0.25rem 0 0.5rem 1.25rem; }
+        #nlp-llm-report li { margin: 0.25rem 0; }
+
+        /* Modern collapsible insights styling */
+        .modern-insights { border: 1px solid #e9ecef; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .modern-insights .insights-header { background: linear-gradient(90deg, #f8fafc, #eef2f7); }
+        .modern-insights .insights-header h5 { font-weight: 600; color: #1f2937; }
+        .modern-insights .insights-chevron { color: #6b7280; transition: transform 0.2s ease; }
+        #insights-panel.show ~ .insights-chevron, .modern-insights .insights-header[aria-expanded="true"] .insights-chevron { transform: rotate(180deg); }
+        .insights-box { min-height: 140px; max-height: 360px; overflow: auto; padding: 8px; background: #fbfbfc; border: 1px solid #eef2f7; border-radius: 6px; }
+        .insights-box .badge { font-size: 0.95rem; }
+        /* More breathing room around chat input and ensure tools menu not clipped */
+        .modern-insights .chat-interface { overflow: visible; width: 100%; margin: 0; }
+        .modern-insights .chat-history { max-height: 420px; overflow-y: auto; }
+        .modern-insights .chat-input { margin-top: 12px; }
+        .modern-insights #tr-chat-tools-menu { z-index: 2000; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="analyzer-app">
+    <main class="analyzer-container container-fluid" id="analyzer-container">
+        <section class="panel center-panel" id="center-panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-tags"></i> {{ get_translation('Tag Report for') }} {{ project_name | safe }}</h3>
+                <div class="analysis-tabs" style="margin-top:10px;">
+                    <button class="analysis-tab-btn active" data-tab="tags">{{ get_translation('Tag Report') }}</button>
+                    <button class="analysis-tab-btn" data-tab="nlp">{{ get_translation('NLP Analysis') }}</button>
+                    <button class="analysis-tab-btn" data-tab="notes">{{ get_translation('Notes Report') }}</button>
+                </div>
+            </div>
+            <div class="analysis-tab-content active" data-tab="tags">
+            <div id="tag-report-summary">
+                <p><strong>{{ get_translation('Total Annotations:') }}</strong> <span id="total-annotations">0</span></p>
+                <p><strong>{{ get_translation('Unique Tags Used:') }}</strong> <span id="unique-tags">0</span></p>
+            </div>
+            <div id="tag-report-filters" class="form-inline">
+                <div class="form-group mr-3">
+                    <label for="tag-filter" class="mr-2">{{ get_translation('Filter by tag:') }}</label>
+                    <select id="tag-filter" class="form-control">
+                        <option value="">{{ get_translation('All Tags') }}</option>
+                    </select>
+                </div>
+                <div class="form-group mr-3">
+                    <label for="data-type-filter" class="mr-2">{{ get_translation('Filter by data type:') }}</label>
+                    <select id="data-type-filter" class="form-control">
+                        <option value="">{{ get_translation('All Data Types') }}</option>
+                        <option value="wrong">{{ get_translation('Wrong') }}</option>
+                        <option value="corrected">{{ get_translation('Corrected') }}</option>
+                        <option value="diff">{{ get_translation('Diff') }}</option>
+                    </select>
+                </div>
+                <div class="form-group mr-3">
+                    <label for="sort-by" class="mr-2">{{ get_translation('Sort by:') }}</label>
+                    <select id="sort-by" class="form-control">
+                        <option value="pair_id">{{ get_translation('Pair ID') }}</option>
+                        <option value="start_offset">{{ get_translation('Start Offset') }}</option>
+                    </select>
+                </div>
+                <div class="form-group mr-3">
+                    <input type="text" id="search-input" class="form-control" placeholder="{{ get_translation('Search annotations...') }}">
+                </div>
+                <div class="dropdown">
+                    <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="exportDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {{ get_translation('Export Data') }}
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="exportDropdown">
+                        <a class="dropdown-item" href="{{ url_for('api.download_project_data', project_name=project_name, file_format='csv') }}">{{ get_translation('Export to CSV') }}</a>
+                        <a class="dropdown-item" href="{{ url_for('api.download_project_data', project_name=project_name, file_format='excel') }}">{{ get_translation('Export to Excel') }}</a>
+                        <a class="dropdown-item" href="{{ url_for('api.download_project_data', project_name=project_name, file_format='xml') }}">{{ get_translation('Export to XML') }}</a>
+                        <a class="dropdown-item" href="{{ url_for('api.download_project_data', project_name=project_name, file_format='yaml') }}">{{ get_translation('Export to YAML') }}</a>
+                        <a class="dropdown-item" href="{{ url_for('api.download_project_data', project_name=project_name, file_format='parquet') }}">{{ get_translation('Export to Parquet') }}</a>
+                        <a class="dropdown-item" href="{{ url_for('api.download_project_data', project_name=project_name, file_format='sqlite') }}">{{ get_translation('Export to SQLite') }}</a>
+                        <a class="dropdown-item" href="{{ url_for('api.download_project_data', project_name=project_name, file_format='html') }}">{{ get_translation('Export to HTML') }}</a>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="card modern-insights" style="margin: 10px 20px 0 20px;">
+                <div class="card-header d-flex align-items-center insights-header" data-toggle="collapse" data-target="#insights-panel" aria-expanded="false" style="cursor:pointer;">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> {{ get_translation('Tag Report Insights') }}</h5>
+                    <div class="model-selector" style="margin-left: auto;">
+                        <button class="model-btn active tr-model-btn" data-model="gemini-2.5-flash"><i class="fas fa-bolt"></i> {{ get_translation('Flash') }}</button>
+                        <button class="model-btn tr-model-btn" data-model="gemini-2.5-pro"><i class="fas fa-crown"></i> {{ get_translation('Pro') }}</button>
+                    </div>
+                    <span class="insights-chevron" style="margin-left: 12px;"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div id="insights-panel" class="collapse">
+                    <div class="card-body">
+                        <div class="chat-interface">
+                            <div class="chat-history" id="tr-chat-history"></div>
+                            <div class="chat-input" id="tr-chat-input-container">
+                                <div class="chat-input-wrapper">
+                                    <div class="chat-tools-container">
+                                        <button class="chat-tool-btn" id="tr-chat-tools-btn"><i class="fas fa-plus"></i></button>
+                                        <div class="chat-tools-menu" id="tr-chat-tools-menu">
+                                            <ul>
+                                                <li data-tool="web-search" data-tool-name="{{ get_translation('Web Search') }}"><i class="fas fa-search"></i> {{ get_translation('Web Search') }}</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div id="tr-active-tool-indicator" class="active-tool-indicator" style="display: none;">
+                                        <span id="tr-active-tool-name"></span>
+                                        <button id="remove-active-tool-btn">&times;</button>
+                                    </div>
+                                    <input type="text" id="chat-input-field" placeholder="{{ get_translation('Ask about the currently filtered annotations...') }}">
+                                    <button class="send-button" id="tr-chat-send"><i class="fas fa-paper-plane"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-inline mt-2">
+                            <small class="text-muted">{{ get_translation('The assistant is aware of current filters (tag, data type, search) and summarizes patterns within the Tag Report.') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-content" id="tag-report-content">
+                <!-- Tag groups will be loaded here -->
+            </div>
+            <div id="pagination-controls" style="text-align: center; margin-top: 20px;">
+                <button id="prev-page" class="btn btn-secondary" disabled>{{ get_translation('Previous') }}</button>
+                <span id="page-info" style="margin: 0 10px;">{{ get_translation('Page 1 of 1') }}</span>
+                <button id="next-page" class="btn btn-secondary" disabled>{{ get_translation('Next') }}</button>
+            </div>
+            </div>
+
+            <div class="analysis-tab-content" data-tab="nlp" style="display:none;">
+                <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                    <h4 style="margin:0;"><i class="fas fa-chart-bar"></i> {{ get_translation('NLP Analysis') }}</h4>
+                    <div class="btn-group" role="group">
+                        <button id="refresh-nlp-summary" class="btn btn-outline-primary" title="{{ get_translation('Refresh') }}"><i class="fas fa-sync"></i></button>
+                        <button id="nlp-llm-report-btn" class="btn btn-primary">{{ get_translation('Generate Report') }}</button>
+                    </div>
+                </div>
+                <div id="nlp-llm-report" class="card" style="padding: 16px; margin-top: 12px; display: none;"></div>
+
+                <div class="row" style="margin-top:12px;">
+                    <div class="col-md-6">
+                        <div class="chart-loading-spinner"></div>
+                        <canvas id="chart-pos"></canvas>
+                        <div class="btn-group mt-2" role="group">
+                          <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ get_translation('Export') }}</button>
+                          <div class="dropdown-menu">
+                            <a class="dropdown-item export-chart-item" data-chart="chart-pos" data-format="csv">{{ get_translation('CSV') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-pos" data-format="excel">{{ get_translation('Excel') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-pos" data-format="json">{{ get_translation('JSON') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-pos" data-format="yaml">{{ get_translation('YAML') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-pos" data-format="parquet">{{ get_translation('Parquet') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-pos" data-format="html">{{ get_translation('HTML') }}</a>
+                          </div>
+                        </div>
+                        <div class="mt-1"><small class="text-muted">{{ get_translation('Shows counts of part-of-speech (POS) tags in wrong vs corrected texts. Read each tag left-to-right: taller blue bars mean the POS is more frequent in corrected, taller red bars mean it is more frequent in wrong.') }}</small></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-loading-spinner"></div>
+                        <canvas id="chart-dep"></canvas>
+                        <div class="btn-group mt-2" role="group">
+                          <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ get_translation('Export') }}</button>
+                          <div class="dropdown-menu">
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep" data-format="csv">{{ get_translation('CSV') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep" data-format="excel">{{ get_translation('Excel') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep" data-format="json">{{ get_translation('JSON') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep" data-format="yaml">{{ get_translation('YAML') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep" data-format="parquet">{{ get_translation('Parquet') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep" data-format="html">{{ get_translation('HTML') }}</a>
+                          </div>
+                        </div>
+                        <div class="mt-1"><small class="text-muted">{{ get_translation('Shows counts of dependency relations in wrong vs corrected texts. Compare red (wrong) and blue (correct) per label to see shifts in syntactic structure.') }}</small></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:16px;">
+                    <div class="col-md-12">
+                        <div class="chart-loading-spinner"></div>
+                        <canvas id="chart-dep-delta"></canvas>
+                        <div class="btn-group mt-2" role="group">
+                          <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ get_translation('Export') }}</button>
+                          <div class="dropdown-menu">
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep-delta" data-format="csv">{{ get_translation('CSV') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep-delta" data-format="excel">{{ get_translation('Excel') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep-delta" data-format="json">{{ get_translation('JSON') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep-delta" data-format="yaml">{{ get_translation('YAML') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep-delta" data-format="parquet">{{ get_translation('Parquet') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-dep-delta" data-format="html">{{ get_translation('HTML') }}</a>
+                          </div>
+                        </div>
+                        <div class="mt-1"><small class="text-muted">{{ get_translation('Project-wide change in dependency relations. Bars show Δ = Correct - Wrong. Purple = more frequent in corrected; red = more frequent in wrong. Larger absolute values indicate bigger shifts.') }}</small></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:16px;">
+                    <div class="col-md-6">
+                        <canvas id="chart-dep-slope"></canvas>
+                        <div class="mt-1"><small class="text-muted">{{ get_translation('Top dependency relations (by effect size): per-1k rates with before→after slopes. Lines rising indicate increases after correction.') }}</small></div>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="chart-dep-volcano"></canvas>
+                        <div class="mt-1"><small class="text-muted">{{ get_translation('Volcano plot: x = log-odds effect size (Correct vs Wrong), y = -log10(q). Points to the right/top are stronger and more reliable increases after correction.') }}</small></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:16px;">
+                    <div class="col-md-6">
+                        <div class="chart-loading-spinner"></div>
+                        <canvas id="chart-entities-wc"></canvas>
+                        <div class="btn-group mt-2" role="group">
+                          <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ get_translation('Export') }}</button>
+                          <div class="dropdown-menu">
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-wc" data-format="csv">{{ get_translation('CSV') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-wc" data-format="excel">{{ get_translation('Excel') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-wc" data-format="json">{{ get_translation('JSON') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-wc" data-format="yaml">{{ get_translation('YAML') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-wc" data-format="parquet">{{ get_translation('Parquet') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-wc" data-format="html">{{ get_translation('HTML') }}</a>
+                          </div>
+                        </div>
+                        <div class="mt-1"><small class="text-muted">{{ get_translation('Named entity types in wrong vs corrected texts. Compare each type to see where entities are added, removed, or corrected.') }}</small></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-loading-spinner"></div>
+                        <canvas id="chart-entities-delta"></canvas>
+                        <div class="btn-group mt-2" role="group">
+                          <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ get_translation('Export') }}</button>
+                          <div class="dropdown-menu">
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-delta" data-format="csv">{{ get_translation('CSV') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-delta" data-format="excel">{{ get_translation('Excel') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-delta" data-format="json">{{ get_translation('JSON') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-delta" data-format="yaml">{{ get_translation('YAML') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-delta" data-format="parquet">{{ get_translation('Parquet') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-entities-delta" data-format="html">{{ get_translation('HTML') }}</a>
+                          </div>
+                        </div>
+                        <div class="mt-1"><small class="text-muted">{{ get_translation('Entity type change: Δ = Correct - Wrong. Purple bars = increased after correction; red bars = decreased. Use this to spot systematic entity issues.') }}</small></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:16px;">
+                    <div class="row" style="margin-top:16px;">
+                    <div class="col-md-6">
+                        <div class="chart-loading-spinner"></div>
+                        <canvas id="chart-tense"></canvas>
+                        <div class="btn-group mt-2" role="group">
+                          <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ get_translation('Export') }}</button>
+                          <div class="dropdown-menu">
+                            <a class="dropdown-item export-chart-item" data-chart="chart-tense" data-format="csv">{{ get_translation('CSV') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-tense" data-format="excel">{{ get_translation('Excel') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-tense" data-format="json">{{ get_translation('JSON') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-tense" data-format="yaml">{{ get_translation('YAML') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-tense" data-format="parquet">{{ get_translation('Parquet') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-tense" data-format="html">{{ get_translation('HTML') }}</a>
+                          </div>
+                        </div>
+                        <div class="mt-1"><small class="text-muted">{{ get_translation('Verb tense usage in wrong vs corrected texts. Read per tense to see which tenses are corrected more often.') }}</small></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-loading-spinner"></div>
+                        <canvas id="chart-number"></canvas>
+                        <div class="btn-group mt-2" role="group">
+                          <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ get_translation('Export') }}</button>
+                          <div class="dropdown-menu">
+                            <a class="dropdown-item export-chart-item" data-chart="chart-number" data-format="csv">{{ get_translation('CSV') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-number" data-format="excel">{{ get_translation('Excel') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-number" data-format="json">{{ get_translation('JSON') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-number" data-format="yaml">{{ get_translation('YAML') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-number" data-format="parquet">{{ get_translation('Parquet') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-number" data-format="html">{{ get_translation('HTML') }}</a>
+                          </div>
+                        </div>
+                        <div class="mt-1"><small class="text-muted">{{ get_translation('Number feature usage (e.g., singular vs plural) in wrong vs corrected texts. Differences suggest agreement or count-related corrections.') }}</small></div>
+                    </div>
+                </div>
+                </div>
+                <div class="row" style="margin-top:16px;">
+                    <div class="col-md-12">
+                        <div class="chart-loading-spinner"></div>
+                        <canvas id="chart-edits"></canvas>
+                        <div class="btn-group mt-2" role="group">
+                          <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ get_translation('Export') }}</button>
+                          <div class="dropdown-menu">
+                            <a class="dropdown-item export-chart-item" data-chart="chart-edits" data-format="csv">{{ get_translation('CSV') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-edits" data-format="excel">{{ get_translation('Excel') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-edits" data-format="json">{{ get_translation('JSON') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-edits" data-format="yaml">{{ get_translation('YAML') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-edits" data-format="parquet">{{ get_translation('Parquet') }}</a>
+                            <a class="dropdown-item export-chart-item" data-chart="chart-edits" data-format="html">{{ get_translation('HTML') }}</a>
+                          </div>
+                        </div>
+                        <div class="mt-1"><small class="text-muted">{{ get_translation('Surface edit distribution derived from diffs across the project: how often tokens were added, deleted, or replaced.') }}</small></div>
+                    </div>
+                </div>
+
+                
+            </div>
+
+            <div class="analysis-tab-content" data-tab="notes" style="display:none;">
+                <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                    <h3 style="margin:0;"><i class="fas fa-sticky-note"></i> {{ get_translation('Notes Report') }}</h3>
+                    <div>
+                        <div class="btn-group" role="group">
+                            <button id="generate-notes-report-btn" class="btn btn-primary" disabled>{{ get_translation('Generate Notes Report') }}</button>
+                            <div class="btn-group" role="group">
+                                <button id="exportNotesDropdown" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled>
+                                    {{ get_translation('Export') }}
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="exportNotesDropdown">
+                                    <a class="dropdown-item" href="#" id="export-notes-md">{{ get_translation('Markdown (.md)') }}</a>
+                                    <a class="dropdown-item" href="#" id="export-notes-txt">{{ get_translation('Text (.txt)') }}</a>
+                                    <a class="dropdown-item" href="#" id="export-notes-html">{{ get_translation('HTML (.html)') }}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="notes-report-content" class="card" style="padding: 16px;">
+                    <p id="no-notes-message" style="display:none; color: #6c757d;">{{ get_translation('No notes available for reporting in this project.') }}</p>
+                    <!-- Notes report will be rendered here -->
+                </div>
+            </div>
+
+        </section>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    // Provide project context to static JS without embedding templating inside the static file
+    window.TR_PROJECT_NAME = decodeURIComponent("{{ project_name | urlencode }}".replace(/\+/g, ' '));
+    // Minimal i18n map for static/tag_report.js
+    window.TR_I18N = {
+      all_tags: "{{ get_translation('All Tags') }}",
+      pair_id: "{{ get_translation('Pair ID') }}",
+      context: "{{ get_translation('Context') }}",
+      wrong_label: "{{ get_translation('Wrong') }}",
+      correct_label: "{{ get_translation('Corrected') }}",
+      pos_rates_title: "{{ get_translation('POS Rates per 1k (Wrong vs Correct)') }}",
+      dep_rates_title: "{{ get_translation('Dependencies per 1k (Wrong vs Correct)') }}",
+      dep_delta_title: "{{ get_translation('Dependencies Δ (Correct - Wrong)') }}",
+      dep_volcano_title: "{{ get_translation('Dependency Volcano (effect vs reliability)') }}",
+      dep_volcano_dataset_label: "{{ get_translation('Dependencies') }}",
+      dep_volcano_x_title: "{{ get_translation('Log-odds (Correct vs Wrong)') }}",
+      dep_volcano_y_title: "{{ get_translation('-log10(q)') }}",
+      entities_rates_title: "{{ get_translation('Entities per 1k (Wrong vs Correct)') }}",
+      entities_delta_title: "{{ get_translation('Entities Δ (Correct - Wrong)') }}",
+      failed_fetch_nlp: "{{ get_translation('Failed to fetch NLP summary') }}",
+      failed_load_chart_data: "{{ get_translation('Failed to load chart data.') }}",
+      export_failed: "{{ get_translation('Failed to export chart.') }}",
+      generating_report: "{{ get_translation('Generating report...') }}",
+      failed_generate_report: "{{ get_translation('Failed to generate report.') }}"
+    };
+  </script>
+<script src="{{ url_for('static', filename='tag_report.js') }}"></script>
+<script>
+  // Tab switching (in case not handled elsewhere)
+  (function(){
+    function showTab(tab){
+      document.querySelectorAll('.analysis-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.analysis-tab-content').forEach(el => el.style.display = 'none');
+      const btn = document.querySelector('.analysis-tab-btn[data-tab="'+tab+'"]');
+      const content = document.querySelector('.analysis-tab-content[data-tab="'+tab+'"]');
+      if(btn) btn.classList.add('active');
+      if(content) content.style.display = '';
+
+      if (tab === 'nlp') { if (typeof loadNlpSummary === 'function') { try { loadNlpSummary(); } catch(e) {} } }
+      else if (tab === 'notes') { try { checkNotesAndEnableButton(); } catch(e) {} }
+    }
+    document.querySelectorAll('.analysis-tab-btn').forEach(btn => {
+      btn.addEventListener('click', function(){ showTab(this.getAttribute('data-tab')); });
+    });
+
+    // Initial check if notes tab is active on load
+    if (document.querySelector('.analysis-tab-btn[data-tab="notes"]').classList.contains('active')) {
+      checkNotesAndEnableButton();
+    }
+
+    const notesReportContent = document.getElementById('notes-report-content');
+    const generateNotesBtn = document.getElementById('generate-notes-report-btn');
+    const noNotesMessage = document.getElementById('no-notes-message');
+    const exportNotesDropdown = document.getElementById('exportNotesDropdown');
+    const exportNotesMd = document.getElementById('export-notes-md');
+    const exportNotesTxt = document.getElementById('export-notes-txt');
+    const exportNotesHtml = document.getElementById('export-notes-html');
+
+    function checkNotesAndEnableButton() {
+      console.log('checkNotesAndEnableButton called');
+      fetch(`{{ url_for('api.notes_count_route') }}?project_name=${encodeURIComponent(window.TR_PROJECT_NAME)}`)
+        .then(function(resp){ console.log('Response from notes_count_route:', resp); return resp.json(); })
+        .then(function(data){
+          console.log('Data from notes_count_route:', data);
+          var notesCount = data.count || 0;
+          if (notesCount > 0) {
+            generateNotesBtn.disabled = false;
+            exportNotesDropdown.disabled = false;
+            noNotesMessage.style.display = 'none';
+          } else {
+            generateNotesBtn.disabled = true;
+            exportNotesDropdown.disabled = true;
+            noNotesMessage.style.display = 'block';
+            notesReportContent.innerHTML = '';
+          }
+        })
+        .catch(function(e){
+          console.error('Error checking notes count:', e);
+          generateNotesBtn.disabled = true;
+          exportNotesDropdown.disabled = true;
+          noNotesMessage.style.display = 'block';
+          notesReportContent.innerHTML = '<p style="color:red;">{{ get_translation('Error loading notes status.') }}</p>';
+        });
+    }
+
+    function generateNotesReport() {
+      notesReportContent.innerHTML = '<p style="text-align:center; margin-top: 20px;">{{ get_translation('Generating report...') }}</p>';
+      // Build URL on the client to avoid HTML escaping issues with special characters (e.g., apostrophes)
+      const genUrl = `/api/generate_notes_report/${encodeURIComponent(window.TR_PROJECT_NAME)}`;
+      fetch(genUrl)
+        .then(function(resp){ return resp.json().then(function(data){ return { ok: resp.ok, data: data }; }); })
+        .then(function(result){
+          var ok = result.ok; var data = result.data || {};
+          if (ok) {
+            console.log('Data report received:', data.report);
+            if (data.report) {
+              var mdInstance = window.markdownit ? new window.markdownit() : null;
+              if (mdInstance) {
+                notesReportContent.innerHTML = mdInstance.render(data.report);
+              } else {
+                notesReportContent.innerHTML = data.report;
+              }
+            } else {
+              notesReportContent.innerHTML = '<p>{{ get_translation('No report generated.') }}</p>';
+            }
+          } else {
+            notesReportContent.innerHTML = '<p style="color:red;">{{ get_translation('Failed to generate report:') }} ' + (data.error || '{{ get_translation('Unknown error') }}') + '</p>';
+          }
+        })
+        .catch(function(e){
+          console.error('Error generating notes report:', e);
+          notesReportContent.innerHTML = '<p style="color:red;">{{ get_translation('Network error or server unreachable.') }}</p>';
+        });
+    }
+
+    if (generateNotesBtn) {
+      generateNotesBtn.addEventListener('click', generateNotesReport);
+    }
+
+    // Export functionality for notes report
+    function exportNotesReport(format) {
+      // Build URL on the client to avoid HTML escaping issues with special characters (e.g., apostrophes)
+      const dlUrl = `/api/download_notes_report/${encodeURIComponent(window.TR_PROJECT_NAME)}/${format}`;
+      fetch(dlUrl)
+        .then(function(resp){
+          if (!resp.ok) return resp.json().then(function(data){ throw new Error(data && data.error || 'error'); });
+          return resp.blob();
+        })
+        .then(function(blob){
+          var url = window.URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.style.display = 'none'; a.href = url; a.download = `{{ project_name }}_notes_report.${format}`;
+          document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(url);
+        })
+        .catch(function(e){
+          console.error('Error exporting notes report:', e);
+          alert('{{ get_translation('Network error or server unreachable during export.') }}');
+        });
+    }
+
+    if (exportNotesMd) exportNotesMd.addEventListener('click', () => exportNotesReport('md'));
+    if (exportNotesTxt) exportNotesTxt.addEventListener('click', () => exportNotesReport('txt'));
+    if (exportNotesHtml) exportNotesHtml.addEventListener('click', () => exportNotesReport('html'));
+
+  })();
+
+  // Tag Report Insights logic (collapsible assistant inside Tag Report tab)
+  (function(){
+    const historyEl = document.getElementById('tr-chat-history');
+    const chatInput = document.getElementById('chat-input-field');
+    const chatSend = document.getElementById('tr-chat-send');
+    const toolsBtn = document.getElementById('tr-chat-tools-btn');
+    const toolsMenu = document.getElementById('tr-chat-tools-menu');
+    const toolIndicator = document.getElementById('tr-active-tool-indicator');
+    const toolNameEl = document.getElementById('tr-active-tool-name');
+    const toolRemoveBtn = document.getElementById('remove-active-tool-btn');
+    const inputContainer = document.getElementById('tr-chat-input-container');
+    const md = window.markdownit ? window.markdownit() : null;
+    let currentModel = 'gemini-2.5-flash';
+    let activeTool = null;
+
+    function escapeHtml(s){ const d=document.createElement('div'); d.innerText=s; return d.innerHTML; }
+    function scrollHistoryToBottom(){
+      try { historyEl.scrollTop = historyEl.scrollHeight; } catch(e) {}
+    }
+    function appendMsg(role, content){
+      const msg = document.createElement('div');
+      msg.className = 'chat-message ' + (role === 'user' ? 'user' : 'ai');
+      if (role === 'ai' && md) {
+        try { msg.innerHTML = md.render(String(content||'')); } catch(e){ msg.innerHTML = escapeHtml(String(content||'')); }
+      } else {
+        msg.innerHTML = '<p>' + escapeHtml(String(content||'')) + '</p>';
+      }
+      historyEl.appendChild(msg);
+      scrollHistoryToBottom();
+    }
+
+    async function ask(){
+      const q = (chatInput.value || '').trim();
+      if(!q) return;
+      appendMsg('user', escapeHtml(q));
+      chatInput.value = '';
+      const thinking = document.createElement('div');
+      thinking.className = 'chat-message ai';
+      thinking.innerHTML = '<p>' + "{{ get_translation('Thinking...') }}" + '</p>';
+      historyEl.appendChild(thinking); historyEl.scrollTop = historyEl.scrollHeight;
+
+      const filters = {
+        tag_name: $('#tag-filter').val() || '',
+        data_type: $('#data-type-filter').val() || '',
+        search_query: $('#search-input').val() || '',
+        sort_by: $('#sort-by').val() || 'pair_id',
+        chart_filter: (window.TR_CHART_FILTER || '')
+      };
+
+      const url = '{{ url_for('api.tag_report_chat_route') }}';
+      let ok = false; let data = null; let reqErr = null;
+      await fetch(url, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ project_name: {{ project_name | tojson }}, question: q, filters: filters, use_web_search: (activeTool === 'web-search'), model_name: currentModel })
+      })
+      .then(async (resp) => { ok = resp.ok; try { data = await resp.json(); } catch(e){ data = null; } })
+      .catch((e) => { reqErr = e; });
+      historyEl.removeChild(thinking);
+      if (ok) {
+        appendMsg('ai', (data && data.response) ? data.response : '');
+      } else {
+        if (data && data.error) appendMsg('ai', data.error);
+        else appendMsg('ai', '{{ get_translation("Network error") }}');
+      }
+    }
+
+    if(chatSend) chatSend.addEventListener('click', ask);
+    if(chatInput) chatInput.addEventListener('keydown', function(ev){ if(ev.key === 'Enter') ask(); });
+
+    // Tools menu behavior
+    if (toolsBtn) toolsBtn.addEventListener('click', function(e){ e.stopPropagation(); toolsMenu && toolsMenu.classList.toggle('show'); });
+    document.addEventListener('click', function(){ toolsMenu && toolsMenu.classList.remove('show'); });
+    if (toolsMenu) toolsMenu.addEventListener('click', function(e){
+      const li = e.target.closest('li'); if (!li) return;
+      const tool = li.getAttribute('data-tool'); const name = li.getAttribute('data-tool-name') || tool;
+      activeTool = tool;
+      inputContainer && inputContainer.setAttribute('data-active-tool', activeTool);
+      if (toolIndicator) toolIndicator.style.display = 'flex';
+      if (toolNameEl) toolNameEl.textContent = name;
+      const wrapper = document.querySelector('#tr-chat-input-container .chat-input-wrapper');
+      if (wrapper) wrapper.classList.add('tool-active');
+      toolsMenu.classList.remove('show');
+    });
+    if (toolRemoveBtn) toolRemoveBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      activeTool = null;
+      inputContainer && inputContainer.removeAttribute('data-active-tool');
+      if (toolIndicator) toolIndicator.style.display = 'none';
+      const wrapper = document.querySelector('#tr-chat-input-container .chat-input-wrapper');
+      if (wrapper) wrapper.classList.remove('tool-active');
+    });
+
+    // Model selection like AI Workspace
+    document.querySelectorAll('.tr-model-btn').forEach(btn => {
+      btn.addEventListener('click', function(ev){
+        // Prevent collapsing the insights card when switching models
+        ev.stopPropagation();
+        document.querySelectorAll('.tr-model-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentModel = this.getAttribute('data-model') || currentModel;
+      });
+      // Also guard against mousedown bubbling to the header
+      btn.addEventListener('mousedown', function(ev){ ev.stopPropagation(); });
+    });
+
+    // Prevent clicks inside non-collapse controls from toggling the card
+    ['.model-selector', '#tr-chat-tools-btn', '#tr-chat-send', '#chat-input-field', '#tr-active-tool-indicator']
+      .forEach(sel => {
+        const el = document.querySelector(sel);
+        if (!el) return;
+        el.addEventListener('click', function(ev){ ev.stopPropagation(); });
+        el.addEventListener('mousedown', function(ev){ ev.stopPropagation(); });
+      });
+
+    // Load persisted history on init (render oldest->newest)
+    function loadHistory(){
+      fetch(`{{ url_for('api.tag_report_chat_history_route') }}?project_name={{ project_name | urlencode }}&limit=50`)
+        .then(function(resp){ if(!resp.ok) return null; return resp.json(); })
+        .then(function(data){ if(!data) return; var msgs=(data&&data.history)?data.history:[]; msgs.forEach(function(m){ appendMsg((String(m.sender||'').toLowerCase()==='user')?'user':'ai', m.message||''); }); setTimeout(scrollHistoryToBottom, 0); })
+        .catch(function(e){});
+    }
+    loadHistory();
+
+    // When the collapse opens, ensure we scroll to bottom
+    try {
+      $('#insights-panel').on('shown.bs.collapse', function(){ scrollHistoryToBottom(); });
+    } catch(e) {}
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,83 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+
+{% block title %}{{ get_translation('About - Error Analyzer') }}{% endblock %}
+
+{% block content %}
+<div class="about-container">
+  <section class="hero text-center">
+    <div class="container">
+      <h1 class="display-4">{{ get_translation('About Error Analyzer') }}</h1>
+      <p class="lead">{{ get_translation('A modern tool built to make qualitative error analysis faster, clearer, and more insightful.') }}</p>
+    </div>
+  </section>
+
+  <section class="features-section py-5">
+    <div class="container">
+      <div class="features-grid">
+        <div class="feature-card h-100">
+          <div class="card-body">
+            <div class="feature-icon"><i class="fas fa-bullseye"></i></div>
+            <h3 class="card-title">{{ get_translation('Vision') }}</h3>
+            <p class="card-text">{{ get_translation('Error Analyzer aims to bridge human linguistic expertise with modern AI assistance. It helps researchers, teachers, and practitioners gain a structured, transparent view of errors and corrections so they can focus on interpretation and decision-making, not on busywork.') }}</p>
+          </div>
+        </div>
+        <div class="feature-card h-100">
+          <div class="card-body">
+            <div class="feature-icon"><i class="fas fa-question-circle"></i></div>
+            <h3 class="card-title">{{ get_translation('Why This App') }}</h3>
+            <p class="card-text">{{ get_translation('The app was created to streamline qualitative error analysis in real research contexts where multiple drafts, annotations, and perspectives must come together coherently. It reduces friction in the analysis workflow and offers features tailored to linguistic investigation.') }}</p>
+          </div>
+        </div>
+        <div class="feature-card h-100">
+          <div class="card-body">
+            <div class="feature-icon"><i class="fas fa-users"></i></div>
+            <h3 class="card-title">{{ get_translation('Authorship & Supervision') }}</h3>
+            <p class="card-text">{{ get_translation('Built by <strong>Sid Ahmed KHETTAB</strong>, a full‑stack web developer and a doctoral student in French Linguistics at the University of Oran 2 Mohamed Ben Ahmed, Algeria, and supervised by <strong>Pr. Harig Benmostefa Fatima Zohra</strong>.') | safe }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-5">
+    <div class="container">
+      <div class="features-grid">
+        <div class="feature-card h-100">
+          <div class="card-body text-center">
+            <div class="feature-icon"><i class="fas fa-envelope"></i></div>
+            <h3 class="card-title">{{ get_translation('Contact Me') }}</h3>
+            <p class="card-text">{{ get_translation('For inquiries, support, or collaboration regarding Error Analyzer, please feel free to reach out:') }}</p>
+            <p class="card-text"><a href="mailto:ktbsidahmed@gmail.com" style="color: #4a90e2; font-weight: 600; text-decoration: none;">ktbsidahmed@gmail.com</a></p>
+            <p class="card-text"><a href="mailto:khettab.sidahmed@univ-oran2.dz" style="color: #4a90e2; font-weight: 600; text-decoration: none;">khettab.sidahmed@univ-oran2.dz</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section text-center py-5 bg-light">
+    <div class="container">
+      <h2>{{ get_translation('Get Started') }}</h2>
+      <p class="lead">{{ get_translation('New here? Explore the documentation to learn how to create a project, upload data, annotate, and generate insights.') }}</p>
+      <a class="btn btn-primary btn-lg" href="https://erroranalyzer.com/docs/" target="_blank">{{ get_translation('Open Documentation') }}</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

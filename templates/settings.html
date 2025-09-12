@@ -1,0 +1,125 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+
+{% block title %}{{ get_translation('Settings - Error Analyzer') }}{% endblock %}
+
+{% block head %}
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        
+        .container {
+            padding: 2em;
+        }
+        .form-container {
+            background-color: #fff;
+            padding: 2em;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+        .form-group {
+            margin-bottom: 1em;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5em;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.5em;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .btn {
+            background-color: #007bff;
+            color: #fff;
+            padding: 0.7em 1.2em;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="form-container">
+        <h1>{{ get_translation('Settings') }}</h1>
+        <form action="/update_settings" method="post">
+            
+            
+            <hr>
+            <h2>{{ get_translation('API Keys') }}</h2>
+            <div class="form-group">
+                <label for="google_api_key">{{ get_translation('Google Gemini API Key') }}</label>
+                <input type="password" id="google_api_key" name="google_api_key" value="{{ config['google_api_key'] or '' }}">
+            </div>
+            <div class="form-group">
+                <label>{{ get_translation('Google NLP Service Account File') }}</label>
+                <input type="hidden" name="google_nlp_key_path" value="{{ config['google_nlp_key_path'] or '' }}">
+                <a href="{{ url_for('projects.configure_google_key') }}" class="btn">{{ get_translation('Upload Google NLP Key') }}</a>
+                {% if config['google_nlp_key_path'] %}
+                    <small>{{ get_translation('Current key file') }}: {{ config['google_nlp_key_path'] | basename }}</small>
+                {% else %}
+                    <small>{{ get_translation('Upload your Google NLP Service Account JSON key file.') }}</small>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="btn" id="saveButton" disabled>{{ get_translation('Save Settings') }}</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const saveButton = document.getElementById('saveButton');
+    const inputs = Array.from(form.querySelectorAll('input, select'));
+
+    const initialValues = inputs.map(input => input.value);
+
+    function onInputChange() {
+        const currentValues = inputs.map(input => input.value);
+        const hasChanged = initialValues.some((initialValue, index) => initialValue !== currentValues[index]);
+        saveButton.disabled = !hasChanged;
+    }
+
+    inputs.forEach(input => {
+        input.addEventListener('input', onInputChange);
+    });
+});
+</script>
+{% endblock %}

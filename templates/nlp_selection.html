@@ -1,0 +1,143 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+
+{% block title %}{{ get_translation('NLP Selection - Error Analyzer') }}{% endblock %}
+
+{% block head %}
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --primary-hover-color: #357abd;
+            --background-color: #f7f9fc;
+            --text-color: #333;
+            --card-background-color: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --header-bg: #1a1a1a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2em;
+        }
+
+        main {
+            padding: 4em 0;
+        }
+
+        .table-container {
+            background-color: var(--card-background-color);
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
+
+        .table-container h1 {
+            text-align: center;
+            margin-bottom: 1.5em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 0.8em;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .btn {
+            display: block;
+            width: -webkit-fill-available;
+            padding: 0.8em 1.5em;
+            font-size: 1em;
+            color: white;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s, transform 0.2s;
+            margin-top: 1.5em;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover-color);
+            transform: translateY(-2px);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="table-container">
+        <h1>{{ get_translation('Select Texts for NLP Processing') }}</h1>
+        <form action="{{ url_for('projects.perform_nlp') }}" method="post">
+            <input type="hidden" name="project_name" value="{{ project_name }}">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all"></th>
+                        <th>{{ get_translation('Error Text') }}</th>
+                        <th>{{ get_translation('Corrected Text') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for text in texts %}
+                    <tr>
+                        <td><input type="checkbox" name="selected_texts" value="{{ text['id'] }}" class="text-checkbox"></td>
+                        <td>{{ text['error_text'] }}</td>
+                        <td>{{ text['corrected_text'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" class="btn">{{ get_translation('Perform NLP') }}</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('select-all').addEventListener('click', function(event) {
+        var checkboxes = document.querySelectorAll('.text-checkbox');
+        for (var checkbox of checkboxes) {
+            checkbox.checked = event.target.checked;
+        }
+    });
+</script>
+{% endblock %}

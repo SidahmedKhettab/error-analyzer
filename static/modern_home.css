@@ -1,0 +1,86 @@
+/*
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+*/
+
+/* HERO */
+.hero-section { padding: 5rem 0; text-align: center; }
+.bg-shapes {
+    background-image:
+        radial-gradient(1000px 400px at -10% -20%, #f6f9ff 20%, rgba(246,249,255,0) 60%),
+        radial-gradient(800px 300px at 110% 120%, #f7f7fb 10%, rgba(247,247,251,0) 60%);
+}
+.app-badge {
+    display: inline-block;
+    padding: .35rem .75rem;
+    border-radius: 9999px;
+    border: 1px solid #e5e7eb;
+    background: #f3f7ff;
+    color: #374151;
+    font-weight: 600;
+    font-size: .8rem;
+    letter-spacing: .02em;
+    margin-bottom: .75rem;
+}
+.hero-eyebrow {
+    display: inline-block;
+    font-size: 0.85rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: .5rem;
+}
+.hero-title { font-size: 3rem; font-weight: 800; margin: 0.25rem 0 0; }
+.text-gradient {
+    background: linear-gradient(90deg, #111827, #374151);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero-section .lead { font-size: 1.2rem; max-width: 800px; margin: 1.5rem auto 0; margin-bottom: 25px; color: #4a5568; }
+.hero-actions { margin-top: 1.5rem; }
+.hero-actions .btn + .btn { margin-left: .75rem; }
+
+/* FEATURES */
+.features-wrap { padding: 3.5rem 0; background: #fbfbfd; }
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; }
+.feature-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #eef0f4;
+    box-shadow: 0 6px 20px rgba(17, 24, 39, 0.06);
+    padding: 1.5rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.feature-card:hover { transform: translateY(-4px); box-shadow: 0 16px 35px rgba(17, 24, 39, 0.08); }
+.feature-card-icon {
+    width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    background: #f3f7ff; color: #4a90e2; font-size: 1.4rem; margin-bottom: .75rem;
+}
+.feature-card h3 { margin: .25rem 0 .5rem; font-size: 1.15rem; }
+.feature-card p { color: #4b5563; line-height: 1.6; margin: 0; }
+
+/* CTA */
+.cta-section { padding: 4rem 0 5rem; text-align: center; }
+.cta-section h2 { font-size: 2.25rem; font-weight: 700; margin: 0 0 .5rem; }
+.cta-section p { font-size: 1.05rem; color: #666; margin: 0 0 1.25rem; }
+.btn-lg { padding: 1em 2em; font-size: 1.05rem; }
+.btn-secondary { background-color: #6c757d; }
+.btn-secondary:hover { background-color: #5a6268; }
+.mt-4 { margin-top: 1.25rem; }
+
+@media (max-width: 640px) {
+    .hero-section { padding: 3.5rem 0; }
+    .hero-title { font-size: 2.2rem; }
+    .hero-section .lead { font-size: 1.05rem; }
+}

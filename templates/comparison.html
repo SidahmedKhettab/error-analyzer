@@ -1,0 +1,213 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+
+{% block title %}{{ get_translation('Concatenate Elements') }}{% endblock %}
+
+{% block head %}
+    <link href="{{ url_for('static', filename='comparison.css') }}" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block body_start %}
+    <div class="toggle-btn"><i class="fas fa-bars"></i></div>
+
+    <div class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('site.home') }}">{{ get_translation('Home') }}</a></li>
+            <li><a href="#">{{ get_translation('About') }}</a></li>
+            <li><a href="#">{{ get_translation('Services') }}</a></li>
+            <li><a href="#">{{ get_translation('Contact') }}</a></li>
+            <li><a href="{{ url_for('projects.settings') }}">{{ get_translation('Settings') }}</a></li>
+        </ul>
+
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-link active" data-tab="ErrorPairs">{{ get_translation('Error Pairs') }}</button>
+                <button class="tab-link" data-tab="Highlights">{{ get_translation('Highlights') }}</button>
+            </div>
+            <div id="ErrorPairs" class="tab-content active">
+                <h3>{{ get_translation('Error Pairs') }}</h3>
+                <ul id="pair-id-list">
+                    <!-- Pair ID buttons will be dynamically added here -->
+                </ul>
+            </div>
+            <div id="Highlights" class="tab-content">
+                <h3>{{ get_translation('Highlights') }}</h3>
+                <!-- Content for Highlights tab -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup edit box for editing highlights -->
+    <div class="popup-edit-overlay"></div>
+    <div class="popup-edit-box">
+        <h2>{{ get_translation('Edit Highlight') }}</h2>
+        <label for="highlight-name">{{ get_translation('Name') }}</label>
+        <input type="text" id="highlight-name">
+        <label for="highlight-description">{{ get_translation('Description') }}</label>
+        <textarea id="highlight-description"></textarea>
+        <div class="button-group">
+            <button class="save-button">{{ get_translation('Save') }}</button>
+            <button class="delete-button">{{ get_translation('Delete') }}</button>
+            <button class="close-button">x</button>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="content">
+        <h1 style="text-align:center">{{ get_translation('Comparison') }}</h1>
+        <div class="toggle-label">
+            <label class="switch">
+                <input type="checkbox" id="toggle-click">
+                <span class="slider"></span>
+            </label>
+            <span style="margin-left:10px">{{ get_translation('Click on elements to highlight all instances. Switch back to select mode to disable highlighting.') }}</span>
+        </div>
+
+        <div class="toggle-label">
+            <label class="switch">
+                <input type="checkbox" id="toggle-tagging" disabled>
+                <span class="slider"></span>
+            </label>
+            <span style="margin-left:10px">{{ get_translation('Toggle Tagging Mode') }}</span>
+        </div>
+
+        <div id="analysis_dropdown">
+            <select id="analysisType" style="margin-bottom: 10px;">
+                <option value="morphological">{{ get_translation('Morphological Insights') }}</option>
+                <option value="entity">{{ get_translation('Entity Insights') }}</option>
+            </select>
+        </div>
+
+        <h2 style="text-align:center">{{ get_translation('Genre & Classification') }} <a href="#" id="hide-link">{{ get_translation('[hide]') }}</a></h2>
+        <div id="genreclass"></div>
+
+        <h2 style="text-align:center">{{ get_translation('Wrong Text') }}</h2>
+        <div id="result_wrong"></div>
+        <div id="wrong_morphology_table" style="display: none;"></div>
+
+        <h2 style="text-align:center">{{ get_translation('Correct Text') }}</h2>
+        <div id="result_correct"></div>
+        <div id="correct_morphology_table" style="display: none;"></div>
+
+        <h2 style="text-align:center">{{ get_translation('Diff Text') }}</h2>
+        <div id="result_diff"></div>
+        <div id="diff_morphology_table" style="display: none;"></div>
+
+        <h2 style="text-align:center">{{ get_translation('Legend') }}</h2>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="color-tape replaced-tape"></div>
+                <span>{{ get_translation('Replaced text, unit, or character') }}</span>
+            </div>
+            <div class="legend-item">
+                <div class="color-tape replaced-by-tape"></div>
+                <span>{{ get_translation('Replaced by text, unit, or character') }}</span>
+            </div>
+            <div class="legend-item">
+                <div class="color-tape added-tape"></div>
+                <span>{{ get_translation('Added text, unit, or character') }}</span>
+            </div>
+            <div class="legend-item">
+                <div class="color-tape deleted-tape"></div>
+                <span>{{ get_translation('Deleted text, unit, or character') }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup for tagging -->
+    <div id="tagging-popup" class="popup" style="display:none; position:absolute;"></div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Pass data from Flask to JavaScript
+        var wrongData = {{ html_wrong | tojson | safe }};
+        var correctData = {{ html_correct | tojson | safe }};
+        var diffData = {{ html_diff | tojson | safe }};
+        var genreData = {{ genre_and_main_idea | tojson | safe }};
+        var highlightsData = {{ highlights | tojson | safe }};
+        var initialPairId = {{ initial_pair_id | tojson | safe }};
+    </script>
+    <script src="{{ url_for('static', filename='comparison.js') }}"></script>
+    <script>
+
+        $(document).ready(function () {
+
+                // Get unique pair IDs from elements with the 'operations' class
+                const pairIds = [];
+                $('.operations').each(function () {
+                    const pairId = $(this).data('pair-id');
+                    if (!pairIds.includes(pairId)) {
+                        pairIds.push(pairId);
+                    }
+                });
+
+                const pairIdList = $('#pair-id-list');
+                $.each(pairIds, function (index, id) {
+                    const li = $('<li>');
+                    const a = $('<a>', {
+                        href: '#',
+                        text: `Pair ${id}`,
+                        'data-pair-id': id
+                    }).on('click', function (e) {
+                        e.preventDefault();
+                        showElementsByPairId(id);
+                    });
+                    li.append(a);
+                    pairIdList.append(li);
+                });
+
+                // Show elements with the initial Pair ID or 1 by default
+                if (initialPairId) {
+                    showElementsByPairId(initialPairId);
+                } else {
+                    showElementsByPairId(1);
+                }
+            });
+
+            function showElementsByPairId(pairId) {
+                $('.operations').each(function () {
+                    if (parseInt($(this).data('pair-id')) === pairId) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+
+    </script>
+
+
+    <script>
+        $(document).ready(function() {
+            $('.tab-link').click(function() {
+                var tabName = $(this).data('tab');
+
+                $('.tab-content').removeClass('active');
+                $('#' + tabName).addClass('active');
+
+                $('.tab-link').removeClass('active');
+                $(this).addClass('active');
+            });
+        });
+    </script>
+{% endblock %}

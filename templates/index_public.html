@@ -1,0 +1,64 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-section bg-shapes">
+    <div class="container">
+        <h1 class="hero-title text-gradient">{{ get_translation('Tag, compare, and learn faster.') }}</h1>
+        <p class="lead">{{ get_translation('Error Analyzer: an AI-assisted qualitative error analysis application.') }}</p>
+        <div class="hero-actions mt-4">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">{{ get_translation('Get started') }}</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-lg">{{ get_translation('Login') }}</a>
+        </div>
+    </div>
+</section>
+
+<section id="projects" class="features-wrap">
+    <div class="container">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-card-icon"><i class="fas fa-folder-open"></i></div>
+                <h3>{{ get_translation('Organize projects') }}</h3>
+                <p>{{ get_translation('Keep every analysis tidy with project-level organization, so your data is always right where you expect it.') }}</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-card-icon"><i class="fas fa-highlighter"></i></div>
+                <h3>{{ get_translation('Fast, precise tagging') }}</h3>
+                <p>{{ get_translation('Compare pairs, highlight issues, and tag errors quickly with a streamlined workflow designed for clarity.') }}</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-card-icon"><i class="fas fa-chart-line"></i></div>
+                <h3>{{ get_translation('Insights that matter') }}</h3>
+                <p>{{ get_translation('Turn data into understanding with neat summaries and visuals, revealing patterns you can act on.') }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container">
+        <h2>{{ get_translation('Start analyzing in minutes') }}</h2>
+        <p>{{ get_translation('Create your account or log in to jump straight into your first project.') }}</p>
+        <div class="mt-4">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">{{ get_translation('Create your account') }}</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-lg">{{ get_translation('Login') }}</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

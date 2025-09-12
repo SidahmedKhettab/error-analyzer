@@ -1,0 +1,35 @@
+
+# IDE and OS specific files
+.idea/
+desktop.ini
+
+# Virtual Environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Databases
+# Ignore all content in the databases folder...
+databases/*
+# ...but DO NOT ignore the .gitkeep file.
+!databases/.gitkeep
+*.db
+*.sqlite3
+
+# Uploads folder
+# Ignore all content in the uploads folder...
+uploads/*
+# ...but DO NOT ignore the .gitkeep file.
+!uploads/.gitkeep
+
+# Temporary Google Drive folders
+.tmp.drivedownload/
+.tmp.driveupload/
+
+# Build artifacts
+dist/
+build/
+*.spec
+config.json

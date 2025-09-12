@@ -1,0 +1,799 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+
+{% block title %}{{ get_translation('Error Analyzer') }}{% endblock %}
+
+{% block head %}
+    <link href="{{ url_for('static', filename='erroranalyzer.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='comparison.css') }}" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
+    {# displaCy is loaded dynamically in erroranalyzer.js when needed #}
+    
+{% endblock %}
+
+{% block body_start %}
+    
+
+    <div class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('site.home') }}">{{ get_translation('Home') }}</a></li>
+            <li><a href="#">{{ get_translation('About') }}</a></li>
+            <li><a href="#">{{ get_translation('Services') }}</a></li>
+            <li><a href="#">{{ get_translation('Contact') }}</a></li>
+            <li><a href="{{ url_for('projects.settings') }}">{{ get_translation('Settings') }}</a></li>
+            <li><a href="{{ url_for('site.tag_report', project_name=project_name) }}">{{ get_translation('Tag Report') }}</a></li>
+        </ul>
+
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-link active" data-tab="ErrorPairs">{{ get_translation('Error Pairs') }}</button>
+                <button class="tab-link" data-tab="Highlights">{{ get_translation('Highlights') }}</button>
+            </div>
+            <div id="ErrorPairs" class="tab-content active">
+                <h3>{{ get_translation('Error Pairs') }}</h3>
+                <ul id="pair-id-list">
+                    <!-- Pair ID buttons will be dynamically added here -->
+                </ul>
+            </div>
+            <div id="Highlights" class="tab-content">
+                <h3>{{ get_translation('Highlights') }}</h3>
+                <!-- Content for Highlights tab -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup edit box for editing highlights -->
+    <div class="popup-edit-overlay"></div>
+    <div class="popup-edit-box">
+        <h2>{{ get_translation('Edit Highlight') }}</h2>
+        <label for="highlight-name">{{ get_translation('Name') }}</label>
+        <input type="text" id="highlight-name">
+        <label for="highlight-description">{{ get_translation('Description') }}</label>
+        <textarea id="highlight-description"></textarea>
+        <div class="button-group">
+            <button class="save-button">{{ get_translation('Save') }}</button>
+            <button class="delete-button">{{ get_translation('Delete') }}</button>
+            <button class="close-button">x</button>
+        </div>
+    </div>
+
+    <!-- Context menu for tagging -->
+    <div id="tag-context-menu" class="context-menu">
+        <ul>
+            <li id="add-tag-option">{{ get_translation('Add Annotation') }}</li>
+            <li id="remove-tag-option" style="display:none;">{{ get_translation('Remove Annotation') }}</li>
+        </ul>
+    </div>
+
+    <!-- Tagging modal -->
+    <div id="tagging-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>{{ get_translation('Tag Selection') }}</h2>
+                <button class="close-modal close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-tag-list">
+                    <!-- Tags will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-annotation-btn">{{ get_translation('Save') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remove Tag Modal -->
+    <div id="remove-tag-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>{{ get_translation('Select Annotation to Remove') }}</h2>
+                <button class="close-remove-tag-modal close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <ul id="remove-tag-list">
+                    <!-- Tags to remove will be listed here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Tag Modal -->
+    <div id="add-edit-tag-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="tag-modal-title">{{ get_translation('Add New Tag') }}</h2>
+                <button class="close-modal-edit close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="tag-id-input">
+                <div class="form-group">
+                    <label for="tag-name-input">{{ get_translation('Name') }}</label>
+                    <input type="text" id="tag-name-input" placeholder="{{ get_translation('Enter tag name') }}">
+                </div>
+                <div class="form-group">
+                    <label for="tag-description-input">{{ get_translation('Description') }}</label>
+                    <textarea id="tag-description-input" placeholder="{{ get_translation('Enter tag description (optional)') }}"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="parent-tag-select">{{ get_translation('Parent Tag (optional)') }}</label>
+                    <select id="parent-tag-select">
+                        <option value="">{{ get_translation('None') }}</option>
+                        <!-- Parent tags will be loaded here -->
+                    </select>
+                </div>
+                <div class="form-group">
+                <label for="tag-color-input">{{ get_translation('Color') }}</label>
+                <div class="color-input-wrapper">
+                    <input type="color" id="tag-color-input" value="#000000">
+                </div>
+            </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-tag-btn">{{ get_translation('Save Tag') }}</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="analyzer-app">
+    
+
+    <!-- Main Content Area -->
+    <main class="analyzer-container" id="analyzer-container">
+
+        <!-- Left Panel: Source Viewer -->
+        <aside class="panel left-panel" id="left-panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-book-open"></i> {{ get_translation('Sources') }}</h3>
+                <button id="toggle-left-panel" class="icon-button"><i class="fas fa-columns"></i></button>
+            </div>
+            <div class="panel-content">
+                <div class="text-section">
+                    <div class="text-section-header">
+                        <h4>{{ get_translation('Error Pairs') }}</h4>
+                    </div>
+                    <div class="error-pairs-card-container text-card">
+                        <ul id="pair-id-list-analyzer">
+                            <!-- Pair ID buttons will be dynamically added here -->
+                        </ul>
+                    </div>
+                </div>
+                <div id="text-comparison-container">
+                    <!-- Content for each text pair will be loaded here -->
+                </div>
+
+                <div class="text-section">
+                    <div class="text-section-header">
+                        <h4>{{ get_translation('Legend') }}</h4>
+                    </div>
+                    <div class="text-card">
+                        <div class="legend">
+                            <div class="legend-item">
+                                <div class="color-tape replaced-tape"></div>
+                                <span>{{ get_translation('Replaced text, unit, or character') }}</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="color-tape replaced-by-tape"></div>
+                                <span>{{ get_translation('Replaced by text, unit, or character') }}</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="color-tape added-tape"></div>
+                                <span>{{ get_translation('Added text, unit, or character') }}</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="color-tape deleted-tape"></div>
+                                <span>{{ get_translation('Deleted text, unit, or character') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Panel: AI-Powered Workspace -->
+        <section class="panel center-panel" id="center-panel">
+            <div class="panel-header">
+            <h3><i class="fas fa-magic"></i> {{ get_translation('AI Workspace') }}</h3>
+            <div class="model-selector">
+                <button class="model-btn active" data-model="gemini-2.5-flash">
+                    <i class="fas fa-bolt"></i> Flash
+                </button>
+                <button class="model-btn" data-model="gemini-2.5-pro">
+                    <i class="fas fa-crown"></i> Pro
+                </button>
+            </div>
+        </div>
+            <div class="panel-content">
+                <div class="selected-text" style="display:none;">
+                    <h4>{{ get_translation('Selected Text:') }} <span class="selected-text-content"></span></h4>
+                </div>
+                <div class="analysis-output">
+                </div>
+                <div class="chat-interface">
+                    <div class="chat-history" id="chat-history">
+                        <!-- Chat messages will be dynamically inserted here -->
+                    </div>
+                    <button id="scroll-to-bottom-btn" class="scroll-to-bottom-btn" style="display: none;"><i class="fas fa-arrow-down"></i></button>
+                    <div class="chat-input" id="chat-input-container">
+                        <div class="chat-input-wrapper">
+                            <div class="chat-tools-container">
+                                <button class="chat-tool-btn" id="chat-tools-btn"><i class="fas fa-plus"></i></button>
+                                <div class="chat-tools-menu" id="chat-tools-menu">
+                                    <ul>
+                                        <li data-tool="auto-tag" data-tool-name="{{ get_translation('Auto Tag') }}"><i class="fas fa-tags"></i> {{ get_translation('Auto Tag') }}</li>
+                                        <li data-tool="web-search" data-tool-name="{{ get_translation('Web Search') }}"><i class="fas fa-search"></i> {{ get_translation('Web Search') }}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div id="active-tool-indicator" class="active-tool-indicator" style="display: none;">
+                                <span id="active-tool-name"></span>
+                                <button id="remove-active-tool-btn">&times;</button>
+                            </div>
+                            <input type="text" id="chat-input-field" placeholder="{{ get_translation('Ask a follow-up question...') }}">
+                            <button class="send-button" id="send-chat-btn"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Analyst's Noteboard -->
+        <aside class="panel right-panel" id="right-panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-clipboard-list"></i> {{ get_translation('Noteboard') }}</h3>
+                <a href="{{ url_for('site.tag_report', project_name=project_name) }}" class="panel-header-action">
+                    <i class="fas fa-chart-pie"></i> {{ get_translation('Tag Insights') }}
+                </a>
+                <button id="toggle-right-panel" class="icon-button"><i class="fas fa-columns"></i></button>
+            </div>
+            <div class="panel-content">
+                <div class="tag-library">
+                    <div class="tag-library-header">
+                        <h4>{{ get_translation('Project Tags') }}</h4>
+                        <div class="tag-header-actions">
+                            <button id="explore-tags-btn" class="icon-button" title="Explore/Filter Annotations"><i class="fas fa-compass"></i></button>
+                            <button id="modify-tags-btn" class="icon-button" title="Modify Tags"><i class="fas fa-pencil-alt"></i></button>
+                        </div>
+                    </div>
+                    <div class="tag-input-container">
+                        <input type="text" id="new-tag-name" placeholder="{{ get_translation('Search tags...') }}">
+                        <button id="add-tag-btn" class="add-tag-button">+</button>
+                    </div>
+                    <div id="tag-modification-container" style="display: none;">
+                        <div class="tag-list-header">
+                            <input type="checkbox" id="select-all-tags-checkbox">
+                            <label for="select-all-tags-checkbox">{{ get_translation('Select All') }}</label>
+                            <button id="delete-selected-tags-btn" class="delete-selected-button" disabled>{{ get_translation('Delete Selected') }}</button>
+                        </div>
+                    </div>
+                    <ul id="project-tags-list" class="tag-list">
+                        <!-- Tags will be dynamically loaded here -->
+                    </ul>
+                </div>
+                <div class="scratchpad">
+                    <div class="scratchpad-header">
+                        <h4>{{ get_translation('Notes') }}</h4>
+                        <button id="add-note-btn" class="add-note-button"><i class="fas fa-plus"></i> {{ get_translation('Add Note') }}</button>
+                    </div>
+                    <div id="notes-list" class="notes-list">
+                        <!-- Notes will be dynamically loaded here -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- Note Editor Modal -->
+    <div id="note-editor-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="note-modal-title">{{ get_translation('Create Note') }}</h2>
+                <button class="close-note-modal close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="note-id-input">
+                <div class="form-group">
+                    <label for="note-title-input">{{ get_translation('Title') }}</label>
+                    <input type="text" id="note-title-input" placeholder="{{ get_translation('Enter note title') }}">
+                </div>
+                <div class="form-group">
+                    <label>{{ get_translation('Content') }}</label>
+                    <div id="note-quill-editor"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-note-btn">{{ get_translation('Save Note') }}</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Pass data from Flask to JavaScript
+    var wrongData = {{ html_wrong | tojson | safe }};
+    var correctData = {{ html_correct | tojson | safe }};
+    var diffData = {{ html_diff | tojson | safe }};
+    var genreData = {{ genre_and_main_idea | tojson | safe }};
+    var highlightsData = {{ highlights | tojson | safe }};
+    var textPairs = {{ text_pairs | tojson | safe }};
+</script>
+<script>
+    // Localized labels for static JS
+    window.I18N = Object.assign({}, window.I18N || {}, {
+        wrongText: "{{ get_translation('Wrong Text') }}",
+        correctText: "{{ get_translation('Correct Text') }}",
+        diffView: "{{ get_translation('Diff View') }}",
+        // AI Workspace / NLP Analysis
+        nlpAnalysisTitle: "{{ get_translation('NLP Analysis') }}",
+        refreshTooltip: "{{ get_translation('Refresh') }}",
+        collapseExpandTooltip: "{{ get_translation('Collapse/Expand') }}",
+        tabOverview: "{{ get_translation('Overview') }}",
+        tabCategories: "{{ get_translation('Categories') }}",
+        tabLayers: "{{ get_translation('Layers') }}",
+        tabDelta: "{{ get_translation('Delta') }}",
+        tabEvidence: "{{ get_translation('Evidence') }}",
+        tabDependency: "{{ get_translation('Dependency') }}",
+        tabMorphology: "{{ get_translation('Morphology') }}",
+        tabTopics: "{{ get_translation('Topics') }}",
+        tabCohesion: "{{ get_translation('Cohesion') }}",
+        tabDebug: "{{ get_translation('Debug') }}",
+        tabNer: "{{ get_translation('NER') }}",
+        viewLabel: "{{ get_translation('View:') }}",
+        // Analysis labels
+        globalPatterns: "{{ get_translation('Global Patterns') }}",
+        observations: "{{ get_translation('Observations') }}",
+        dataBacked: "{{ get_translation('data-backed') }}",
+        interpretations: "{{ get_translation('Interpretations') }}",
+        theoryGuided: "{{ get_translation('theory-guided') }}",
+        limitations: "{{ get_translation('Limitations') }}",
+        overviewNotAvailable: "{{ get_translation('Overview not available.') }}",
+        noFindings: "{{ get_translation('No findings.') }}",
+        category: "{{ get_translation('Category') }}",
+        layer: "{{ get_translation('Layer') }}",
+        posDelta: "{{ get_translation('POS Delta') }}",
+        dependencyDelta: "{{ get_translation('Dependency Delta') }}",
+        entitiesDelta: "{{ get_translation('Entities Delta') }}",
+        tenseDelta: "{{ get_translation('Tense Delta') }}",
+        numberDelta: "{{ get_translation('Number Delta') }}",
+        surfaceEdits: "{{ get_translation('Surface Edits') }}",
+        noChanges: "{{ get_translation('No changes.') }}",
+        noDifferencesFound: "{{ get_translation('No differences found.') }}",
+        comparativeDeltasNotAvailable: "{{ get_translation('Comparative deltas not available.') }}",
+        evidence: "{{ get_translation('Evidence') }}",
+        noExplicitEvidence: "{{ get_translation('No explicit evidence provided by the model.') }}",
+        noMorphologyData: "{{ get_translation('No morphology data available.') }}",
+        colToken: "{{ get_translation('Token') }}",
+        colLemma: "{{ get_translation('Lemma') }}",
+        colPOS: "{{ get_translation('POS') }}",
+        colFeatures: "{{ get_translation('Features') }}",
+        colName: "{{ get_translation('Name') }}",
+        colType: "{{ get_translation('Type') }}",
+        colContent: "{{ get_translation('Content') }}",
+        // Morphology feature labels
+        featTense: "{{ get_translation('Tense') }}",
+        featNumber: "{{ get_translation('Number') }}",
+        featPerson: "{{ get_translation('Person') }}",
+        featMood: "{{ get_translation('Mood') }}",
+        featVoice: "{{ get_translation('Voice') }}",
+        featCase: "{{ get_translation('Case') }}",
+        featGender: "{{ get_translation('Gender') }}",
+        divergenceFindings: "{{ get_translation('Divergence Findings') }}",
+        interdisciplinaryInterpretation: "{{ get_translation('Interdisciplinary Interpretation') }}",
+        noSalientMorphological: "{{ get_translation('No salient morphological divergences detected.') }}",
+        noSalientTopics: "{{ get_translation('No salient topic divergences detected.') }}",
+        noSalientCohesion: "{{ get_translation('No salient cohesion divergences detected.') }}",
+        noDependencyData: "{{ get_translation('No dependency data.') }}",
+        dependencyVisFailed: "{{ get_translation('Dependency visualization failed.') }}",
+        loadingAnalysis: "{{ get_translation('Loading analysis...') }}",
+        refreshingAnalysis: "{{ get_translation('Refreshing analysis...') }}"
+    });
+    // Inject localized labels for POS, Entities, and Dependency names used in delta lists
+    window.I18N = Object.assign({}, window.I18N, {
+        // POS
+        'Adjective': "{{ get_translation('Adjective') }}",
+        'Adposition': "{{ get_translation('Adposition') }}",
+        'Adverb': "{{ get_translation('Adverb') }}",
+        'Auxiliary': "{{ get_translation('Auxiliary') }}",
+        'Coordinating conjunction': "{{ get_translation('Coordinating conjunction') }}",
+        'Determiner': "{{ get_translation('Determiner') }}",
+        'Interjection': "{{ get_translation('Interjection') }}",
+        'Noun': "{{ get_translation('Noun') }}",
+        'Numeral': "{{ get_translation('Numeral') }}",
+        'Particle': "{{ get_translation('Particle') }}",
+        'Pronoun': "{{ get_translation('Pronoun') }}",
+        'Proper noun': "{{ get_translation('Proper noun') }}",
+        'Punctuation': "{{ get_translation('Punctuation') }}",
+        'Subordinating conjunction': "{{ get_translation('Subordinating conjunction') }}",
+        'Symbol': "{{ get_translation('Symbol') }}",
+        'Verb': "{{ get_translation('Verb') }}",
+        'Other': "{{ get_translation('Other') }}",
+        // Entities
+        'Person': "{{ get_translation('Person') }}",
+        'Location': "{{ get_translation('Location') }}",
+        'Organization': "{{ get_translation('Organization') }}",
+        'Geo-political entity': "{{ get_translation('Geo-political entity') }}",
+        'Event': "{{ get_translation('Event') }}",
+        'Work of art': "{{ get_translation('Work of art') }}",
+        'Consumer good': "{{ get_translation('Consumer good') }}",
+        'Number': "{{ get_translation('Number') }}",
+        'Ordinal': "{{ get_translation('Ordinal') }}",
+        'Date': "{{ get_translation('Date') }}",
+        'Time': "{{ get_translation('Time') }}",
+        'Duration': "{{ get_translation('Duration') }}",
+        'Money': "{{ get_translation('Money') }}",
+        // Dependency human names (subset commonly surfaced)
+        'Nominal subject': "{{ get_translation('Nominal subject') }}",
+        'Clausal subject': "{{ get_translation('Clausal subject') }}",
+        'Object': "{{ get_translation('Object') }}",
+        'Indirect object': "{{ get_translation('Indirect object') }}",
+        'Oblique nominal': "{{ get_translation('Oblique nominal') }}",
+        'Adjectival modifier': "{{ get_translation('Adjectival modifier') }}",
+        'Adverbial modifier': "{{ get_translation('Adverbial modifier') }}",
+        'Nominal modifier': "{{ get_translation('Nominal modifier') }}",
+        'Coordinating conjunction': "{{ get_translation('Coordinating conjunction') }}",
+        'Conjunct': "{{ get_translation('Conjunct') }}",
+        'Auxiliary': "{{ get_translation('Auxiliary') }}",
+        'Copula': "{{ get_translation('Copula') }}",
+        'Marker': "{{ get_translation('Marker') }}",
+        'Punctuation': "{{ get_translation('Punctuation') }}",
+        'Root': "{{ get_translation('Root') }}",
+        'Open clausal complement': "{{ get_translation('Open clausal complement') }}",
+        'Clausal complement': "{{ get_translation('Clausal complement') }}",
+        'Appositional modifier': "{{ get_translation('Appositional modifier') }}",
+        'Case marking': "{{ get_translation('Case marking') }}",
+        'Direct object': "{{ get_translation('Direct object') }}",
+        'Object of preposition': "{{ get_translation('Object of preposition') }}",
+        'Passive auxiliary': "{{ get_translation('Passive auxiliary') }}",
+        'Nominal subject (passive)': "{{ get_translation('Nominal subject (passive)') }}",
+        'Clausal subject (passive)': "{{ get_translation('Clausal subject (passive)') }}",
+        'Negation modifier': "{{ get_translation('Negation modifier') }}",
+        'Preposition': "{{ get_translation('Preposition') }}",
+        'Attribute': "{{ get_translation('Attribute') }}",
+        'Parataxis': "{{ get_translation('Parataxis') }}",
+        'Temporal modifier': "{{ get_translation('Temporal modifier') }}",
+        'Relative clause modifier': "{{ get_translation('Relative clause modifier') }}",
+        'Expletive': "{{ get_translation('Expletive') }}",
+        'Numeric modifier': "{{ get_translation('Numeric modifier') }}",
+        'Possessive modifier': "{{ get_translation('Possessive modifier') }}"
+    });
+    // Dependency toolbar and messages
+    window.I18N = Object.assign({}, window.I18N, {
+        'zoomOut': "{{ get_translation('Zoom out') }}",
+        'zoomIn': "{{ get_translation('Zoom in') }}",
+        'reset': "{{ get_translation('Reset') }}",
+        'noDepDataGlobal': "{{ get_translation('No dependency data available. Run Google NLP to populate tokens.') }}",
+        'noDepDataWrong': "{{ get_translation('No dependency data for wrong text.') }}",
+        'noDepDataCorrect': "{{ get_translation('No dependency data for correct text.') }}"
+    });
+    // Common analysis concept labels used in Layers/Categories
+    window.I18N = Object.assign({}, window.I18N, {
+        'Agreement': "{{ get_translation('Agreement') }}",
+        'Negation': "{{ get_translation('Negation') }}",
+        'Case': "{{ get_translation('Case') }}",
+        'Syntax': "{{ get_translation('Syntax') }}",
+        'Lexicon': "{{ get_translation('Lexicon') }}",
+        'Orthography': "{{ get_translation('Orthography') }}",
+        'TAM': "{{ get_translation('TAM') }}",
+        'Article': "{{ get_translation('Article') }}",
+        'Preposition': "{{ get_translation('Preposition') }}",
+        'Pronoun': "{{ get_translation('Pronoun') }}",
+        'Word order': "{{ get_translation('Word order') }}",
+        'Subject-verb agreement': "{{ get_translation('Subject-verb agreement') }}",
+        'Article usage': "{{ get_translation('Article usage') }}",
+        'Preposition usage': "{{ get_translation('Preposition usage') }}",
+        'Pronoun reference': "{{ get_translation('Pronoun reference') }}"
+    });
+    // Inject common morphological value names for translation
+    window.I18N = Object.assign({}, window.I18N, {
+        // Number
+        'SINGULAR': "{{ get_translation('SINGULAR') }}",
+        'PLURAL': "{{ get_translation('PLURAL') }}",
+        // Person
+        'FIRST': "{{ get_translation('FIRST') }}",
+        'SECOND': "{{ get_translation('SECOND') }}",
+        'THIRD': "{{ get_translation('THIRD') }}",
+        // Tense
+        'PRESENT': "{{ get_translation('PRESENT') }}",
+        'PAST': "{{ get_translation('PAST') }}",
+        'FUTURE': "{{ get_translation('FUTURE') }}",
+        'IMPERFECT': "{{ get_translation('IMPERFECT') }}",
+        'PERFECT': "{{ get_translation('PERFECT') }}",
+        // Mood
+        'INDICATIVE': "{{ get_translation('INDICATIVE') }}",
+        'SUBJUNCTIVE': "{{ get_translation('SUBJUNCTIVE') }}",
+        'IMPERATIVE': "{{ get_translation('IMPERATIVE') }}",
+        'CONDITIONAL': "{{ get_translation('CONDITIONAL') }}",
+        'INFINITIVE': "{{ get_translation('INFINITIVE') }}",
+        'PARTICIPLE': "{{ get_translation('PARTICIPLE') }}",
+        'GERUND': "{{ get_translation('GERUND') }}",
+        // Voice
+        'ACTIVE': "{{ get_translation('ACTIVE') }}",
+        'PASSIVE': "{{ get_translation('PASSIVE') }}",
+        'MIDDLE': "{{ get_translation('MIDDLE') }}",
+        // Case (common)
+        'NOMINATIVE': "{{ get_translation('NOMINATIVE') }}",
+        'ACCUSATIVE': "{{ get_translation('ACCUSATIVE') }}",
+        'DATIVE': "{{ get_translation('DATIVE') }}",
+        'GENITIVE': "{{ get_translation('GENITIVE') }}",
+        'ABLATIVE': "{{ get_translation('ABLATIVE') }}",
+        'LOCATIVE': "{{ get_translation('LOCATIVE') }}",
+        'INSTRUMENTAL': "{{ get_translation('INSTRUMENTAL') }}",
+        'VOCATIVE': "{{ get_translation('VOCATIVE') }}",
+        // Gender
+        'MASCULINE': "{{ get_translation('MASCULINE') }}",
+        'FEMININE': "{{ get_translation('FEMININE') }}",
+        'NEUTER': "{{ get_translation('NEUTER') }}",
+        'COMMON': "{{ get_translation('COMMON') }}"
+    });
+    // Surface edit labels and generic fallbacks
+    window.I18N = Object.assign({}, window.I18N, {
+        'added tokens': "{{ get_translation('added tokens') }}",
+        'deleted tokens': "{{ get_translation('deleted tokens') }}",
+        'replaced tokens': "{{ get_translation('replaced tokens') }}",
+        'N/A': "{{ get_translation('N/A') }}"
+    });
+    // Auto-tagging plan localization
+    window.I18N = Object.assign({}, window.I18N || {}, {
+        'Start Tagging': "{{ get_translation('Start Tagging') }}",
+        'Auto-Tagging Plan': "{{ get_translation('Auto-Tagging Plan') }}",
+        'Tag to apply:': "{{ get_translation('Tag to apply:') }}",
+        'Please select the text to tag:': "{{ get_translation('Please select the text to tag:') }}",
+        'Both': "{{ get_translation('Both') }}",
+        'Edit': "{{ get_translation('Edit') }}",
+        'Tagging Complete: {count} annotations created.': "{{ get_translation('Tagging Complete: {count} annotations created.') }}",
+        'Auto-tagging finished: {detail}': "{{ get_translation('Auto-tagging finished: {detail}') }}",
+        'No annotations created.': "{{ get_translation('No annotations created.') }}",
+        'Tagging Failed: {error}': "{{ get_translation('Tagging Failed: {error}') }}",
+        'Error checking job status.': "{{ get_translation('Error checking job status.') }}",
+        'Starting...': "{{ get_translation('Starting...') }}",
+        'Tagging in progress...': "{{ get_translation('Tagging in progress...') }}"
+    });
+    </script>
+<script src="{{ url_for('static', filename='erroranalyzer.js') }}"></script>
+<script>
+$(document).ready(function() {
+    const pairIdList = $('#pair-id-list');
+    const pairIdListAnalyzer = $('#pair-id-list-analyzer');
+
+    textPairs.forEach(function(pair) {
+        const li = $('<li></li>');
+        const link = $('<a></a>', {
+            href: '#',
+                    text: pair.title || `Pair ${pair.id}`,
+                    'data-pair-id': String(pair.id),
+                    'class': 'pair-link'
+        });
+
+        link.click(function(e) {
+            e.preventDefault(); // Prevent default link behavior
+            showElementsByPairId(pair.id, wrongData, correctData, diffData);
+        });
+
+        li.append(link);
+        pairIdList.append(li.clone());
+        pairIdListAnalyzer.append(li);
+    });
+
+    // Show elements with the first pair ID by default
+    if (textPairs.length > 0) {
+        showElementsByPairId(textPairs[0].id, wrongData, correctData, diffData);
+    }
+
+    
+
+    const container = $('#analyzer-container');
+    const leftPanel = $('#left-panel');
+    const rightPanel = $('#right-panel');
+
+    // Toggle Left Panel
+    $('#toggle-left-panel').click(function() {
+        container.toggleClass('left-panel-collapsed');
+    });
+
+    // Toggle Right Panel
+    $('#toggle-right-panel').click(function() {
+        container.toggleClass('right-panel-collapsed');
+    });
+});
+</script>
+<script>
+let hasLoadedAnnotations = false;
+function loadAndDisplayAnnotationsOnce() {
+    if (hasLoadedAnnotations) {
+        return;
+    }
+    hasLoadedAnnotations = true;
+    const projectName = getUrlParameter('project_name');
+    if (!projectName) {
+        console.error("Project name is missing from URL.");
+        return;
+    }
+
+    $.ajax({
+        url: `/api/annotations?project_name=${projectName}`,
+        type: 'GET',
+        success: function(response) {
+            const annotations = response.annotations;
+            // Sort annotations to apply from the inside out.
+            // Sort by start offset descending, then end offset ascending.
+            annotations.sort((a, b) => b.start_offset - a.start_offset || a.end_offset - b.end_offset);
+
+            annotations.forEach(annotation => {
+                let dataType = annotation.data_type;
+                if (dataType === 'error_text' || dataType === 'wrong') {
+                    dataType = 'wrong';
+                } else if (dataType === 'corrected_text') {
+                    dataType = 'correct';
+                }
+                const textCardId = `result_${dataType}_${annotation.pair_id}`;
+                const element = document.getElementById(textCardId);
+
+                if (element) {
+                    try {
+                        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+                        const textNodes = [];
+                        while(walker.nextNode()) {
+                            textNodes.push(walker.currentNode);
+                        }
+
+                        let charIndex = 0;
+                        let startNode, startOffset, endNode, endOffset;
+
+                        for (const node of textNodes) {
+                            const nodeLength = node.textContent.length;
+                            const nodeStart = charIndex;
+                            const nodeEnd = charIndex + nodeLength;
+
+                            if (startNode === undefined && nodeEnd >= annotation.start_offset) {
+                                startNode = node;
+                                startOffset = annotation.start_offset - nodeStart;
+                            }
+                            if (endNode === undefined && nodeEnd >= annotation.end_offset) {
+                                endNode = node;
+                                endOffset = annotation.end_offset - nodeStart;
+                                break;
+                            }
+                            charIndex = nodeEnd;
+                        }
+
+                        if (startNode && endNode) {
+                            const range = document.createRange();
+                            range.setStart(startNode, startOffset);
+                            range.setEnd(endNode, endOffset);
+
+                            // Check for existing annotation spans within this range to determine nesting level for offset
+                            const fragment = range.cloneContents();
+                            const existingSpans = fragment.querySelectorAll('.annotation-span');
+                            let maxOffset = 0; // Start with a base offset for the first underline
+                            existingSpans.forEach(s => {
+                                const currentOffset = parseInt(s.style.textUnderlineOffset || '0px', 10);
+                                if (currentOffset > maxOffset) {
+                                    maxOffset = currentOffset;
+                                }
+                            });
+
+                            const newOffset = maxOffset + 3;
+
+                            const underlineStyle = annotation.parent_tag_id ? 'dashed' : 'solid';
+                            const span = document.createElement('span');
+                            span.className = 'annotation-span'; // Add class for identification
+                            span.setAttribute('data-annotation-id', annotation.id);
+                            span.setAttribute('data-tag-id', annotation.tag_id);
+                            span.style.textDecoration = 'underline';
+                            span.style.textDecorationColor = annotation.tag_color;
+                            span.style.textDecorationStyle = underlineStyle;
+                            span.style.textDecorationThickness = '2px';
+                            span.style.textUnderlineOffset = `${newOffset}px`;
+
+                            // Use the fallback mechanism for surroundContents
+                            try {
+                                range.surroundContents(span);
+                            } catch (e) {
+                                if (e instanceof DOMException && e.name === 'InvalidStateError') {
+                                    const extracted = range.extractContents();
+                                    span.appendChild(extracted);
+                                    range.insertNode(span);
+                                } else {
+                                    throw e;
+                                }
+                            }
+                        }
+                    } catch (e) {
+                         console.error("Error processing annotation:", annotation, e);
+                    }
+                }
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error("Error fetching annotations:", error);
+        }
+    });
+}
+
+$(document).ready(function() {
+    // Initial load of annotations is handled by showElementsByPairId via static/erroranalyzer.js
+    // This legacy function is kept for reference but not invoked to avoid conflicts.
+});
+</script>
+<script>
+$(document).ready(function() {
+    const toolsBtn = $('#chat-tools-btn');
+    const toolsMenu = $('#chat-tools-menu');
+    const chatInputContainer = $('#chat-input-container');
+    const chatInputWrapper = $('.chat-input-wrapper');
+    const activeToolIndicator = $('#active-tool-indicator');
+    const activeToolName = $('#active-tool-name');
+    const removeToolBtn = $('#remove-active-tool-btn');
+    const chatInputField = $('#chat-input-field');
+
+    const defaultPlaceholder = chatInputField.attr('placeholder');
+    const autoTagPlaceholder = "{{ get_translation('Describe how to auto-tag the data...') }}";
+
+    toolsBtn.on('click', function(e) {
+        e.stopPropagation();
+        toolsMenu.toggleClass('show');
+    });
+
+    $(window).on('click', function(e) {
+        if (toolsMenu.hasClass('show') && !$(e.target).closest('.chat-tools-container').length) {
+            toolsMenu.removeClass('show');
+        }
+    });
+
+    toolsMenu.on('click', 'li', function() {
+        const tool = $(this).data('tool');
+        const toolName = $(this).data('tool-name');
+
+        activeToolName.text(toolName);
+        chatInputContainer.data('active-tool', tool);
+        chatInputWrapper.addClass('tool-active');
+        activeToolIndicator.show();
+        
+        if (tool === 'auto-tag') {
+            chatInputField.attr('placeholder', autoTagPlaceholder);
+        } else {
+            chatInputField.attr('placeholder', defaultPlaceholder);
+        }
+
+        // Dynamically adjust padding
+        const indicatorWidth = activeToolIndicator.outerWidth();
+        chatInputField.css('padding-left', indicatorWidth + 50 + 'px');
+
+        toolsMenu.removeClass('show');
+    });
+
+    removeToolBtn.on('click', function() {
+        activeToolIndicator.hide();
+        chatInputWrapper.removeClass('tool-active');
+        chatInputContainer.removeData('active-tool');
+        chatInputField.attr('placeholder', defaultPlaceholder);
+        $('#chat-input-field').css('padding-left', '45px'); // Reset padding
+    });
+});
+</script>
+
+{% endblock %}

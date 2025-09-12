@@ -1,0 +1,41 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+{% block title %}{{ get_translation('Profile -') }} {{ profile_user.username }}{% endblock %}
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <img src="{{ profile_user.avatar_url or url_for('static', filename='ErrorAnalyzer.png') }}" alt="avatar" class="avatar">
+        <div class="profile-info">
+            <h1>@{{ profile_user.username }}</h1>
+            {% if profile_user.full_name %}<p>{{ profile_user.full_name }}</p>{% endif %}
+            {% if profile_user.email %}<p>{{ profile_user.email }}</p>{% endif %}
+        </div>
+    </div>
+    {% if profile_user.bio %}
+        <p class="profile-bio">{{ profile_user.bio }}</p>
+    {% endif %}
+
+    {% if current_user and current_user.id == profile_user.id %}
+        <div class="profile-actions">
+            <a href="{{ url_for('auth.edit_profile') }}" class="btn">{{ get_translation('Edit profile') }}</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

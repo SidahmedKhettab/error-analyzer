@@ -1,0 +1,46 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+{% block title %}{{ get_translation('Register') }}{% endblock %}
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>{{ get_translation('Create an account') }}</h1>
+        <form method="post" action="{{ url_for('auth.register') }}">
+            <div class="form-group">
+                <label>{{ get_translation('Username') }}</label>
+                <input type="text" name="username" required>
+            </div>
+            <div class="form-group">
+                <label>{{ get_translation('Email (optional)') }}</label>
+                <input type="email" name="email">
+            </div>
+            <div class="form-group">
+                <label>{{ get_translation('Full name (optional)') }}</label>
+                <input type="text" name="full_name">
+            </div>
+            <div class="form-group">
+                <label>{{ get_translation('Password') }}</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit" class="btn">{{ get_translation('Sign up') }}</button>
+        </form>
+        <p class="auth-switch-link">{{ get_translation('Already have an account?') }} <a href="{{ url_for('auth.login') }}">{{ get_translation('Login') }}</a></p>
+    </div>
+</div>
+{% endblock %}

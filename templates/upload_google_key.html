@@ -1,0 +1,184 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+{% extends 'base.html' %}
+
+{% block title %}{{ get_translation('Upload Google Key - Error Analyzer') }}{% endblock %}
+
+{% block head %}
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --primary-hover-color: #357abd;
+            --background-color: #f7f9fc;
+            --text-color: #333;
+            --card-background-color: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --header-bg: #1a1a1a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2em;
+        }
+
+        main {
+            padding: 4em 0;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 2em auto;
+            background-color: var(--card-background-color);
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
+
+        .form-container h1 {
+            text-align: center;
+            margin-bottom: 1.5em;
+        }
+
+        .instructions {
+            text-align: left;
+            margin-bottom: 2em;
+        }
+
+        .instructions ol {
+            padding-left: 1.5em;
+        }
+
+        .instructions li {
+            margin-bottom: 0.5em;
+        }
+
+        .file-upload {
+            margin-top: 1em;
+            padding: 2em;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload label {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.8em 1.5em;
+            font-size: 1em;
+            color: white;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s, transform 0.2s;
+            margin-top: 1.5em;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover-color);
+            transform: translateY(-2px);
+        }
+
+        .flash-message {
+            color: red;
+            margin-bottom: 1em;
+            text-align: center;
+        }
+
+        .flash-message ul {
+            list-style-type: none;
+            padding: 0;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="form-container">
+        <h1>{{ get_translation('Upload Google Secret Key') }}</h1>
+        <div class="instructions">
+            <p>{{ get_translation('Follow these instructions to obtain and download your Google Cloud Service Account key:') }}</p>
+            <ol>
+                <li>{{ get_translation('Go to the') }} <a href="https://console.cloud.google.com/" target="_blank">{{ get_translation('Google Cloud Console') }}</a>.</li>
+                <li>{{ get_translation('Select or create a new project.') }}</li>
+                <li>{{ get_translation('Navigate to "IAM & Admin" > "Service Accounts".') }}</li>
+                <li>{{ get_translation('Click "Create Service Account".') }}</li>
+                <li>{{ get_translation('Provide a name and description for the service account, then click "Continue".') }}</li>
+                <li>{{ get_translation('Assign the necessary roles to the service account, then click "Done".') }}</li>
+                <li>{{ get_translation('In the Service Accounts list, find the newly created account, click the three dots in the "Actions" column, and select "Manage keys".') }}</li>
+                <li>{{ get_translation('Click "Add Key" > "Create new key".') }}</li>
+                <li>{{ get_translation('Select "JSON" as the key type, then click "Create".') }}</li>
+                <li>{{ get_translation('Your new private key file will be downloaded to your computer.') }}</li>
+            </ol>
+        </div>
+        <div class="flash-message">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <ul>
+                {% for category, message in messages %}
+                  <li class="{{ category }}">{{ message | safe }}</li>
+                {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+        </div>
+        <form action="{{ url_for('projects.update_settings') }}" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="google_api_key" value="{{ config['google_api_key'] or '' }}">
+            
+            <input type="hidden" name="google_nlp_key_path" value="{{ config['google_nlp_key_path'] or '' }}">
+            <div class="file-upload">
+                <input type="file" id="googleKeyFile" name="google_nlp_key_file" accept=".json">
+                <label for="googleKeyFile">{{ get_translation('Upload Google Secret Key') }}</label>
+            </div>
+            <button type="submit" class="btn">{{ get_translation('Upload') }}</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('googleKeyFile').addEventListener('change', function() {
+        var label = document.querySelector('label[for="googleKeyFile"]');
+        if (this.files.length > 0) {
+            label.textContent = this.files[0].name;
+        } else {
+            label.textContent = "{{ get_translation('Upload Google Secret Key') }}";
+        }
+    });
+</script>
+{% endblock %}

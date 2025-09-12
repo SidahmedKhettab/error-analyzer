@@ -1,0 +1,104 @@
+<!--
+Copyright © 2025 Sid Ahmed KHETTAB
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+-->
+
+<!DOCTYPE html>
+<html lang="{{ session.get('language', 'en') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Error Analyzer{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='modern_home.css') }}">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    {% block head %}{% endblock %}
+</head>
+<body>
+{% block body_start %}{% endblock %}
+
+<header>
+    <div class="container header-content">
+        <div class="logo">
+            <a href="{{ url_for('site.home') }}">
+                <img src="{{ url_for('static', filename='ErrorAnalyzer.png') }}" alt="Error Analyzer Logo" />
+            </a>
+        </div>
+        {% include 'nav.html' %}
+    </div>
+</header>
+
+<main class="{% if request.endpoint and 'error_analyzer' in request.endpoint %}no-main-padding{% else %}container{% endif %}">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer>
+    <div class="container footer-content" style="text-align: center;">
+        <p style="margin-bottom: 0.1rem; margin-top: 0;">
+            <span>{{ get_translation('Copyright') }} © 2025 <a href="https://scholar.google.com/citations?user=ABvaWHoAAAAJ&hl=en" target="_blank">Sid Ahmed KHETTAB</a> | </span>
+            <span class="italic-text">{{ get_translation('Developed during doctoral research at the University of Oran 2 Mohamed Ben Ahmed, under the supervision of') }} <a href="https://scholar.google.fr/citations?user=MULc2x4AAAAJ&" target="_blank">Prof. Fatima Zohra HARIG BENMOSTEFA</a></span>
+        </p>
+        <p class="italic-text" style="margin-top: 0.1rem; margin-bottom: 0;">
+            {% if session.get('language', 'en') == 'fr' %}
+                {{ get_translation('Licensed under the') }} <a href="https://www.gnu.org/licenses/agpl-3.0.fr.html" target="_blank">AGPLv3</a>.
+            {% else %}
+                {{ get_translation('Licensed under the') }} <a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">AGPLv3</a>.
+            {% endif %}
+        </p>
+    </div>
+</footer>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var flashes = document.querySelectorAll('.flash');
+        if (!flashes || flashes.length === 0) return;
+
+        Array.prototype.forEach.call(flashes, function (flash) {
+            var delay = parseInt(flash.getAttribute('data-timeout') || '3000', 10);
+            setTimeout(function () {
+                flash.classList.add('fade-out');
+
+                var removed = false;
+                var onEnd = function () {
+                    if (removed) return;
+                    removed = true;
+                    if (flash && flash.parentNode) {
+                        flash.parentNode.removeChild(flash);
+                    }
+                };
+
+                flash.addEventListener('transitionend', onEnd, { once: true });
+
+                setTimeout(onEnd, 700);
+            }, isNaN(delay) ? 3000 : delay);
+        });
+    });
+    </script>
+<script src="{{ url_for('static', filename='lang.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
